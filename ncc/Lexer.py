@@ -25,19 +25,23 @@ class Lexer:
         sys.exit(1)
 
     def nextChar(self):
-        c = self.src.read()
+        c = self.src.read(1)
+        while c in [' ', '\t']:
+            c = self.src.read(1)
 
-        if c == self.SYMBOLS[self.NL]:
+        if c == '\n':
             self.line = self.line + 1
             self.char = 0
         else:
             self.char = self.char + 1
+
 
         return c
 
     def state_1(self):
         print("state_1")
         sym = self.nextChar()
+        print('[',sym,']')
 
         if sym.isalpha():
             self.state_2()
@@ -63,43 +67,65 @@ class Lexer:
     def state_2(self):
         print("state2")
         sym = self.nextChar()
+        print('[',sym,']')
 
         if sym.isalpha() or sym.isdigit():
             self.state_2()
+        self.state_1()
 
     def state_3(self):
         print("state3")
         sym = self.nextChar()
+        print('[',sym,']')
 
         if sym.isdigit():
             self.state_3()
         elif sym == '.':
             self.state_4()
 
+        self.state_1()
+
     def state_4(self):
         print("stage4")
         sym = self.nextChar()
+        print('[',sym,']')
 
         if sym.isdigit():
             self.state_3()
         else:
             self.error()
 
+        self.state_1()
+
     def state_5(self):
         print("stage5")
         sym = self.nextChar()
+        print('[',sym,']')
+
+        self.state_1()
 
     def state_6(self):
         print("stage6")
         sym = self.nextChar()
+        print('[',sym,']')
+
+        self.state_1()
 
     def state_7(self):
         print("stage7")
         sym = self.nextChar()
+        print('[',sym,']')
+
+        self.state_1()
 
     def state_8(self):
         print("stage8")
         sym = self.nextChar()
+        print('[',sym,']')
+
+        self.state_1()
 
     def state_9(self):
-        print("state8")
+        print("state9")
+
+        self.state_1()
