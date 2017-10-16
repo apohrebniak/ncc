@@ -16,103 +16,137 @@ class Lexer:
     def __init__(self, src):
         self.src = src
         self.buffer = ''
-        self.line = 0
+        self.line = 1
         self.char = 0
+        self.sym = ''
+        self.readNext = True
+
+    def add_lexem(self):
+        print(self.buffer)
+        self.buffer = ""
+
+    def add_to_buffer(self):
+        self.buffer = self.buffer + self.sym
 
     def error(self):
-        print("Lexer error!")
+        print("Lexer error! at", self.line, ":", self.char)
         sys.exit(1)
 
-    def nextChar(self):
-        c = self.src.read(1)
-        while c in [' ', '\t']:
-            c = self.src.read(1)
+    def read_next_symbol(self):
+        if self.readNext:
+            self.sym = self.src.read(1)
 
-        if c == '\n':
-            self.line = self.line + 1
-            self.char = 0
-        else:
-            self.char = self.char + 1
+            if self.sym == '\n':
+                self.line = self.line + 1
+                self.char = 0
+            else:
+                self.char = self.char + 1
 
-        return c
+        self.readNext = True
+
+        return self.sym
 
     def scan(self):
-        print("state_1")
         while True:
-            sym = self.nextChar()
-            print('[', sym, ']')
+            self.read_next_symbol()
 
-            if len(sym) == 0:
+            while self.sym in [' ', '\t']:
+                self.read_next_symbol()
+
+            self.add_to_buffer()
+
+            if len(self.sym) == 0:
                 return
 
-            if sym.isalpha():
+            if self.sym.isalpha():
                 self.state_2()
-            elif sym.isdigit():
+            elif self.sym.isdigit():
                 self.state_3()
-            elif sym == '.':
+            elif self.sym == '.':
                 self.state_4()
-            elif sym == '!':
+            elif self.sym == '!':
                 self.state_5()
-            elif sym == '=':
+            elif self.sym == '=':
                 self.state_6()
-            elif sym == '<':
+            elif self.sym == '<':
                 self.state_7()
-            elif sym == '>':
+            elif self.sym == '>':
                 self.state_8()
-            elif sym in [',', '\n', '+', '-', '*', '/', '(', ')', '[', ']', '{', '}', '?', ':']:
+            elif self.sym in [',', '\n', '+', '-', '*', '/', '(', ')', '[', ']', '{', '}', '?', ':']:
                 self.state_9()
             else:
                 self.error()
 
-        pass
-
     def state_2(self):
-        print("state2")
-        sym = self.nextChar()
-        print('[', sym, ']')
+        self.read_next_symbol()
 
-        if sym.isalpha() or sym.isdigit():
+        if self.sym.isalpha() or self.sym.isdigit():
+            self.add_to_buffer()
             self.state_2()
+        else:
+            self.readNext = False
+            self.add_lexem()
 
     def state_3(self):
-        print("state3")
-        sym = self.nextChar()
-        print('[', sym, ']')
+        self.read_next_symbol()
 
-        if sym.isdigit():
+        if self.sym.isdigit():
+            self.add_to_buffer()
             self.state_3()
-        elif sym == '.':
+        elif self.sym == '.':
+            self.add_to_buffer()
             self.state_4()
+        else:
+            self.readNext = False
+            self.add_lexem()
 
     def state_4(self):
-        print("stage4")
-        sym = self.nextChar()
-        print('[', sym, ']')
+        self.read_next_symbol()
 
-        if sym.isdigit():
+        if self.sym.isdigit():
+            self.add_to_buffer()
             self.state_3()
         else:
             self.error()
 
     def state_5(self):
-        print("stage5")
-        sym = self.nextChar()
-        print('[', sym, ']')
+        self.read_next_symbol()
+
+        if self.sym == '=':
+            self.add_to_buffer()
+            self.add_lexem()
+        else:
+            self.error()
 
     def state_6(self):
-        print("stage6")
-        sym = self.nextChar()
-        print('[', sym, ']')
+        self.read_next_symbol()
+
+        if self.sym == '=':
+            self.add_to_buffer()
+            self.add_lexem()
+        else:
+            self.add_lexem()
+            self.readNext = False
 
     def state_7(self):
-        print("stage7")
-        sym = self.nextChar()
-        print('[', sym, ']')
+        self.read_next_symbol()
+
+        if self.sym == '=':
+            self.add_to_buffer()
+            self.add_lexem()
+        else:
+            self.add_lexem()
+            self.readNext = False
 
     def state_8(self):
-        print("stage8")
-        sym = self.nextChar()
-        print('[', sym, ']')
+        self.read_next_symbol()
+
+        if self.sym == '=':
+            self.add_to_buffer()
+            self.add_lexem()
+        else:
+            self.add_lexem()
+            self.readNext = False
 
     def state_9(self):
-        print("state9")
+        self.add_lexem()
