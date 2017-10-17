@@ -1,5 +1,10 @@
 import sys
+from ncc.Tocken import Tocken, Word, Constant
 
+class Tocken:
+
+    def __init__(self, index = None, value = None, ):
+        pass
 
 class Lexer:
     LSB, RSB, LFB, RFB, LB, RB, WHILE, DO, IN, OUT, OR, AND, NOT, \
@@ -15,21 +20,30 @@ class Lexer:
 
     def __init__(self, src):
         self.src = src
-        self.buffer = ''
-        self.line = 1
-        self.char = 0
+        self.strBuffer = ''
+        self.lineNum = 1
+        self.charNum = 0
         self.sym = ''
         self.readNext = True
+        self.tockens = []
+        self.ids = []
+        self.constants = []
 
-    def add_lexem(self):
-        print(self.buffer)
-        self.buffer = ""
+    def add_tocken(self):
+        print(self.strBuffer)
+
+        if self.strBuffer in self.SYMBOLS:
+            self.tockens.append(Tocken(self.SYMBOLS[self.strBuffer]))
+        elif self.strBuffer in self.WORDS:
+            self.tockens.append(Word(self.WORDS[self.strBuffer], self.strBuffer, 0))
+
+        self.strBuffer = ""
 
     def add_to_buffer(self):
-        self.buffer = self.buffer + self.sym
+        self.strBuffer = self.strBuffer + self.sym
 
     def error(self):
-        print("Lexer error! at", self.line, ":", self.char)
+        print("Lexer error! at", self.lineNum, ":", self.charNum)
         sys.exit(1)
 
     def read_next_symbol(self):
@@ -37,10 +51,10 @@ class Lexer:
             self.sym = self.src.read(1)
 
             if self.sym == '\n':
-                self.line = self.line + 1
-                self.char = 0
+                self.lineNum = self.lineNum + 1
+                self.charNum = 0
             else:
-                self.char = self.char + 1
+                self.charNum = self.charNum + 1
 
         self.readNext = True
 
@@ -85,7 +99,7 @@ class Lexer:
             self.state_2()
         else:
             self.readNext = False
-            self.add_lexem()
+            self.add_tocken()
 
     def state_3(self):
         self.read_next_symbol()
@@ -98,7 +112,7 @@ class Lexer:
             self.state_4()
         else:
             self.readNext = False
-            self.add_lexem()
+            self.add_tocken()
 
     def state_4(self):
         self.read_next_symbol()
@@ -114,7 +128,7 @@ class Lexer:
 
         if self.sym == '=':
             self.add_to_buffer()
-            self.add_lexem()
+            self.add_tocken()
         else:
             self.error()
 
@@ -123,9 +137,9 @@ class Lexer:
 
         if self.sym == '=':
             self.add_to_buffer()
-            self.add_lexem()
+            self.add_tocken()
         else:
-            self.add_lexem()
+            self.add_tocken()
             self.readNext = False
 
     def state_7(self):
@@ -133,9 +147,9 @@ class Lexer:
 
         if self.sym == '=':
             self.add_to_buffer()
-            self.add_lexem()
+            self.add_tocken()
         else:
-            self.add_lexem()
+            self.add_tocken()
             self.readNext = False
 
     def state_8(self):
@@ -143,10 +157,10 @@ class Lexer:
 
         if self.sym == '=':
             self.add_to_buffer()
-            self.add_lexem()
+            self.add_tocken()
         else:
-            self.add_lexem()
+            self.add_tocken()
             self.readNext = False
 
     def state_9(self):
-        self.add_lexem()
+        self.add_tocken()
