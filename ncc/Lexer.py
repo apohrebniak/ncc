@@ -1,5 +1,6 @@
 import sys
 from ncc.Token import Token, Word, Constant
+from ncc.Table import Table
 
 
 class Lexer:
@@ -11,8 +12,10 @@ class Lexer:
                ':': DOTS, '=': EQ, '+': PLUS, '-': MINUS, '*': MUL, '/': DIV,
                '!=': NEQ, '<': LOW, '<=': LOWEQ, '>': HI, '>=': HIEQ, '\n': NL, '?': QM}
 
-    WORDS = {"while": WHILE, "do": DO, "in": IN, "out": OUT, "or": OR,
+    WORDS = {"if": IF, "while": WHILE, "do": DO, "in": IN, "out": OUT, "or": OR,
              "and": AND, "not": NOT, "int": INT, "float": FLOAT}
+
+    TYPES = {"int", "float"}
 
     def __init__(self, src):
         self.src = src
@@ -22,10 +25,11 @@ class Lexer:
         self.sym = ''
         self.readNext = True
         self.tokens = []
-        self.ids = []
-        self.constants = dict()
+        self.ids = Table(3)
+        self.constants = Table(2)
+        self.typeBuffer = None
 
-    def add_tocken(self):
+    def add_token(self):
         print(self.strBuffer)
 
         if self.strBuffer in self.SYMBOLS:
@@ -33,27 +37,32 @@ class Lexer:
         elif self.strBuffer in self.WORDS:
             self.tokens.append(Word(self.WORDS[self.strBuffer], self.strBuffer, 0))
         else:
-            # check table
-            if self.strBuffer in self.ids:
-                index = self.ids[self.strBuffer][0]
-            else:
-                index = len(self.ids)
 
-            self.tokens.append(Word(self.ID, self.strBuffer, index))
+            value = self.strBuffer
+            row = self.ids.get_row_for_value(value, 0)
+
+            if row is None:
+                index = self.ids.add_row(value, self.constants.next_index(), "unknown")
+            else:
+                index = self.ids.next_index()
+
+            self.tokens.append(Constant(self.CONST, value, index))
 
         self.strBuffer = ""
 
     def add_constant_token(self):
 
-        value = float(self.strBuffer)
+        value = float(self.strBuffer) if "." in self.strBuffer else int(self.strBuffer)
+        row = self.constants.get_row_for_value(value, 0)
 
-        if value in self.constants:
-            index = self.constants[value]
+        if row is None:
+            index = self.constants.add_row(value, self.constants.next_index())
         else:
-            index = len(self.constants)
-            self.constants[value] = index
+            index = self.constants.next_index()
 
         self.tokens.append(Constant(self.CONST, value, index))
+
+        self.strBuffer = ""
 
     def add_to_buffer(self):
         self.strBuffer = self.strBuffer + self.sym
@@ -115,7 +124,7 @@ class Lexer:
             self.state_2()
         else:
             self.readNext = False
-            self.add_tocken()
+            self.add_token()
 
     def state_3(self):
         self.read_next_symbol()
@@ -144,7 +153,7 @@ class Lexer:
 
         if self.sym == '=':
             self.add_to_buffer()
-            self.add_tocken()
+            self.add_token()
         else:
             self.error()
 
@@ -153,9 +162,9 @@ class Lexer:
 
         if self.sym == '=':
             self.add_to_buffer()
-            self.add_tocken()
+            self.add_token()
         else:
-            self.add_tocken()
+            self.add_token()
             self.readNext = False
 
     def state_7(self):
@@ -163,9 +172,9 @@ class Lexer:
 
         if self.sym == '=':
             self.add_to_buffer()
-            self.add_tocken()
+            self.add_token()
         else:
-            self.add_tocken()
+            self.add_token()
             self.readNext = False
 
     def state_8(self):
@@ -173,13 +182,13 @@ class Lexer:
 
         if self.sym == '=':
             self.add_to_buffer()
-            self.add_tocken()
+            self.add_token()
         else:
-            self.add_tocken()
+            self.add_token()
             self.readNext = False
 
     def state_9(self):
-        self.add_tocken()
+        self.add_token()
 
     def state_10(self):
 
@@ -192,4 +201,4 @@ class Lexer:
             self.state_3()
         else:
             self.readNext = False
-            self.add_tocken()
+            self.add_token()
