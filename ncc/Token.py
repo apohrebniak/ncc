@@ -1,9 +1,10 @@
-class Tocken:
+class Token:
+
     def __init__(self, tag):
         self.tag = tag
 
 
-class Word(Tocken):
+class Word(Token):
 
     def __init__(self, tag, lexeme, index):
         super().__init__(tag)
@@ -11,7 +12,7 @@ class Word(Tocken):
         self.index = index
 
 
-class Constant(Tocken):
+class Constant(Token):
 
     def __init__(self, tag, value, index):
         super().__init__(tag)

@@ -1,10 +1,6 @@
 import sys
-from ncc.Tocken import Tocken, Word, Constant
+from ncc.Token import Token, Word, Constant
 
-class Tocken:
-
-    def __init__(self, index = None, value = None, ):
-        pass
 
 class Lexer:
     LSB, RSB, LFB, RFB, LB, RB, WHILE, DO, IN, OUT, OR, AND, NOT, \
@@ -25,19 +21,39 @@ class Lexer:
         self.charNum = 0
         self.sym = ''
         self.readNext = True
-        self.tockens = []
+        self.tokens = []
         self.ids = []
-        self.constants = []
+        self.constants = dict()
 
     def add_tocken(self):
         print(self.strBuffer)
 
         if self.strBuffer in self.SYMBOLS:
-            self.tockens.append(Tocken(self.SYMBOLS[self.strBuffer]))
+            self.tokens.append(Token(self.SYMBOLS[self.strBuffer]))
         elif self.strBuffer in self.WORDS:
-            self.tockens.append(Word(self.WORDS[self.strBuffer], self.strBuffer, 0))
+            self.tokens.append(Word(self.WORDS[self.strBuffer], self.strBuffer, 0))
+        else:
+            # check table
+            if self.strBuffer in self.ids:
+                index = self.ids[self.strBuffer][0]
+            else:
+                index = len(self.ids)
+
+            self.tokens.append(Word(self.ID, self.strBuffer, index))
 
         self.strBuffer = ""
+
+    def add_constant_token(self):
+
+        value = float(self.strBuffer)
+
+        if value in self.constants:
+            index = self.constants[value]
+        else:
+            index = len(self.constants)
+            self.constants[value] = index
+
+        self.tokens.append(Constant(self.CONST, value, index))
 
     def add_to_buffer(self):
         self.strBuffer = self.strBuffer + self.sym
@@ -112,14 +128,14 @@ class Lexer:
             self.state_4()
         else:
             self.readNext = False
-            self.add_tocken()
+            self.add_constant_token()
 
     def state_4(self):
         self.read_next_symbol()
 
         if self.sym.isdigit():
             self.add_to_buffer()
-            self.state_3()
+            self.state_10()
         else:
             self.error()
 
@@ -164,3 +180,16 @@ class Lexer:
 
     def state_9(self):
         self.add_tocken()
+
+    def state_10(self):
+
+        """exception state for constants"""
+
+        self.read_next_symbol()
+
+        if self.sym.isdigit():
+            self.add_to_buffer()
+            self.state_3()
+        else:
+            self.readNext = False
+            self.add_tocken()
