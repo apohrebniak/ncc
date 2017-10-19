@@ -15,7 +15,7 @@ class Lexer:
     WORDS = {"if": IF, "while": WHILE, "do": DO, "in": IN, "out": OUT, "or": OR,
              "and": AND, "not": NOT, "int": INT, "float": FLOAT}
 
-    TYPES = {"int", "float"}
+    TYPES = {INT: "int", FLOAT: "float"}
 
     def __init__(self, src):
         self.src = src
@@ -42,9 +42,12 @@ class Lexer:
             row = self.ids.get_row_for_value(value, 0)
 
             if row is None:
-                index = self.ids.add_row(value, self.constants.next_index(), "unknown")
+                if len(self.tokens) > 0 and self.tokens[-1].tag in self.TYPES:
+                    index = self.ids.add_row(value, self.constants.next_index(), self.TYPES[self.tokens[-1].tag])
+                else:
+                    self.error()
             else:
-                index = self.ids.next_index()
+                index = None
 
             self.tokens.append(Constant(self.CONST, value, index))
 

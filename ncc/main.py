@@ -8,7 +8,7 @@ def main():
     stream = open(sys.argv[1])
     lexer = Lexer.Lexer(stream)
     lexer.scan()
-    print(lexer.constants)
+    # print(lexer.constants)
     print(lexer.ids)
 
 if __name__ == "__main__":
