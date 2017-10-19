@@ -7,7 +7,7 @@ class Table:
     def add_row(self, *row):
         assert len(row) == self.columns
         self.rows.append(row)
-        return len(self.rows)
+        return len(self.rows) - 1
 
     def contains(self, value, column):
         return True if len([row for row in self.rows if row[column] == value]) else False

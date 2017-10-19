@@ -27,15 +27,14 @@ class Lexer:
         self.tokens = []
         self.ids = Table(3)
         self.constants = Table(2)
-        self.typeBuffer = None
 
     def add_token(self):
         # print(self.strBuffer)
 
         if self.strBuffer in self.SYMBOLS:
-            self.tokens.append(Token(self.SYMBOLS[self.strBuffer]))
+            self.tokens.append(Token(self.SYMBOLS[self.strBuffer], self.lineNum))
         elif self.strBuffer in self.WORDS:
-            self.tokens.append(Word(self.WORDS[self.strBuffer], self.strBuffer, 0))
+            self.tokens.append(Token(self.WORDS[self.strBuffer], self.lineNum))
         else:
 
             value = self.strBuffer
@@ -47,16 +46,15 @@ class Lexer:
                 else:
                     self.error()
             else:
-                index = None
+                index = row[1]
 
-            self.tokens.append(Constant(self.CONST, value, index))
+            self.tokens.append(Word(self.ID, self.lineNum, value, index))
 
         self.strBuffer = ""
 
     def add_constant_token(self):
 
         value = float(self.strBuffer) if "." in self.strBuffer else int(self.strBuffer)
-        # print(value)
         row = self.constants.get_row_for_value(value, 0)
 
         if row is None:
@@ -64,7 +62,7 @@ class Lexer:
         else:
             index = self.constants.next_index()
 
-        self.tokens.append(Constant(self.CONST, value, index))
+        self.tokens.append(Constant(self.CONST, self.lineNum, value, index))
 
         self.strBuffer = ""
 
