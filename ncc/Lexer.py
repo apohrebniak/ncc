@@ -6,11 +6,11 @@ from ncc.Table import Table
 class Lexer:
     LSB, RSB, LFB, RFB, LB, RB, WHILE, DO, IN, OUT, OR, AND, NOT, \
     INT, FLOAT, IF, DOTS, EQ, PLUS, MINUS, MUL, DIV, NEQ, LOW, LOWEQ, \
-    HI, HIEQ, ID, CONST, NL, QM = range(31)
+    HI, HIEQ, ID, CONST, NL, QM, COMMA = range(32)
 
     SYMBOLS = {'[': LSB, ']': RSB, '{': LFB, '}': RFB, '(': LB, ')': RB,
                ':': DOTS, '=': EQ, '+': PLUS, '-': MINUS, '*': MUL, '/': DIV,
-               '!=': NEQ, '<': LOW, '<=': LOWEQ, '>': HI, '>=': HIEQ, '\n': NL, '?': QM}
+               '!=': NEQ, '<': LOW, '<=': LOWEQ, '>': HI, '>=': HIEQ, '\n': NL, '?': QM, ",": COMMA}
 
     WORDS = {"if": IF, "while": WHILE, "do": DO, "in": IN, "out": OUT, "or": OR,
              "and": AND, "not": NOT, "int": INT, "float": FLOAT}
@@ -30,7 +30,7 @@ class Lexer:
         self.typeBuffer = None
 
     def add_token(self):
-        print(self.strBuffer)
+        # print(self.strBuffer)
 
         if self.strBuffer in self.SYMBOLS:
             self.tokens.append(Token(self.SYMBOLS[self.strBuffer]))
@@ -56,6 +56,7 @@ class Lexer:
     def add_constant_token(self):
 
         value = float(self.strBuffer) if "." in self.strBuffer else int(self.strBuffer)
+        # print(value)
         row = self.constants.get_row_for_value(value, 0)
 
         if row is None:
