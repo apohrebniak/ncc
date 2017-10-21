@@ -1,8 +1,9 @@
-#python3.5
+#! /usr/bin/python3.5
 
 import sys
-import ncc.Lexer as Lexer
-import ncc.Token
+import ncc.lexer as Lexer
+import ncc.token
+
 
 def main():
     stream = open(sys.argv[1])
@@ -12,9 +13,9 @@ def main():
     print("TABLE")
     print("=================")
     for token in lexer.tokens:
-        if isinstance(token, ncc.Token.Word):
+        if isinstance(token, ncc.token.Word):
             print(token.tag, token.row_num, token.lexeme, token.index)
-        elif isinstance(token, ncc.Token.Constant):
+        elif isinstance(token, ncc.token.Constant):
             print(token.tag, token.row_num, token.value, token.index)
         else:
             print(token.tag, token.row_num)
@@ -26,6 +27,7 @@ def main():
     print("IDS")
     print("=================")
     print(lexer.ids)
+
 
 if __name__ == "__main__":
     main()

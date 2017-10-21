@@ -1,22 +1,10 @@
 import sys
-from ncc.Token import Token, Word, Constant
-from ncc.Table import Table
+from ncc.token import Token, Word, Constant
+from ncc.table import Table
+from ncc.common import *
 
 
 class Lexer:
-    LSB, RSB, LFB, RFB, LB, RB, WHILE, DO, IN, OUT, OR, AND, NOT, \
-    INT, FLOAT, IF, DOTS, EQ, PLUS, MINUS, MUL, DIV, NEQ, LOW, LOWEQ, \
-    HI, HIEQ, ID, CONST, NL, QM, COMMA = range(32)
-
-    SYMBOLS = {'[': LSB, ']': RSB, '{': LFB, '}': RFB, '(': LB, ')': RB,
-               ':': DOTS, '=': EQ, '+': PLUS, '-': MINUS, '*': MUL, '/': DIV,
-               '!=': NEQ, '<': LOW, '<=': LOWEQ, '>': HI, '>=': HIEQ, '\n': NL, '?': QM, ",": COMMA}
-
-    WORDS = {"if": IF, "while": WHILE, "do": DO, "in": IN, "out": OUT, "or": OR,
-             "and": AND, "not": NOT, "int": INT, "float": FLOAT}
-
-    TYPES = {INT: "int", FLOAT: "float"}
-
     def __init__(self, src):
         self.src = src
         self.strBuffer = ''
@@ -29,26 +17,25 @@ class Lexer:
         self.constants = Table(2)
 
     def add_token(self):
-        # print(self.strBuffer)
 
-        if self.strBuffer in self.SYMBOLS:
-            self.tokens.append(Token(self.SYMBOLS[self.strBuffer], self.lineNum))
-        elif self.strBuffer in self.WORDS:
-            self.tokens.append(Token(self.WORDS[self.strBuffer], self.lineNum))
+        if self.strBuffer in SYMBOLS:
+            self.tokens.append(Token(SYMBOLS[self.strBuffer], self.lineNum))
+        elif self.strBuffer in WORDS:
+            self.tokens.append(Token(WORDS[self.strBuffer], self.lineNum))
         else:
 
             value = self.strBuffer
             row = self.ids.get_row_for_value(value, 0)
 
             if row is None:
-                if len(self.tokens) > 0 and self.tokens[-1].tag in self.TYPES:
-                    index = self.ids.add_row(value, self.constants.next_index(), self.TYPES[self.tokens[-1].tag])
+                if len(self.tokens) > 0 and self.tokens[-1].tag in TYPES:
+                    index = self.ids.add_row(value, self.constants.next_index(), TYPES[self.tokens[-1].tag])
                 else:
-                    self.error()
+                    self.error("Unknown variable " + self.strBuffer)
             else:
                 index = row[1]
 
-            self.tokens.append(Word(self.ID, self.lineNum, value, index))
+            self.tokens.append(Word(ID, self.lineNum, value, index))
 
         self.strBuffer = ""
 
@@ -62,15 +49,15 @@ class Lexer:
         else:
             index = self.constants.next_index()
 
-        self.tokens.append(Constant(self.CONST, self.lineNum, value, index))
+        self.tokens.append(Constant(CONST, self.lineNum, value, index))
 
         self.strBuffer = ""
 
     def add_to_buffer(self):
         self.strBuffer = self.strBuffer + self.sym
 
-    def error(self):
-        print("Lexer error! at", self.lineNum, ":", self.charNum)
+    def error(self, msg="Lexer error!"):
+        print(msg, " at", self.lineNum, ":", self.charNum)
         sys.exit(1)
 
     def read_next_symbol(self):
