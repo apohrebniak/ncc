@@ -1,12 +1,15 @@
 import sys
-from ncc.token import Token, Word, Constant
-from ncc.table import IndTable, ConstantTable
+
 from ncc.common import *
+from ncc.table import IndTable, ConstantTable
+from ncc.token import Token, Word, Constant
 
 
 class Lexer:
     def __init__(self, src):
+        """source stream"""
         self.src = src
+        """lexeme buffer"""
         self.strBuffer = ''
         self.lineNum = 1
         self.charNum = 0
@@ -18,27 +21,18 @@ class Lexer:
 
     def add_token(self):
 
+        # if lexeme is grammar symbol or word
         if self.strBuffer in SYMBOLS:
             self.tokens.append(Token(SYMBOLS[self.strBuffer], self.lineNum))
         elif self.strBuffer in WORDS:
             self.tokens.append(Token(WORDS[self.strBuffer], self.lineNum))
         else:
-
+            # else assume lexeme is id
             value = self.strBuffer
-            # row = self.ids.get_row_for_value(value, 0)
-            #
-            # if row is None:
-            #     if len(self.tokens) > 0 and self.tokens[-1].tag in TYPES:
-            #         index = self.ids.add_row(value, self.constants.next_index(), TYPES[self.tokens[-1].tag])
-            #     else:
-            #         self.error("Unknown variable " + self.strBuffer)
-            # else:
-            #     index = row[1]
-
             if self.ids.contains_value(value):
                 index = self.ids.get_index_of_value(value)
             elif len(self.tokens) > 0 and self.tokens[-1].tag in TYPES:
-                index = self.ids.add_and_get_idex(value, TYPES[self.tokens[-1].tag])
+                index = self.ids.add_and_get_index(value, TYPES[self.tokens[-1].tag])
             else:
                 self.error("Unknown variable " + self.strBuffer)
 
@@ -49,13 +43,6 @@ class Lexer:
     def add_constant_token(self):
 
         value = float(self.strBuffer) if "." in self.strBuffer else int(self.strBuffer)
-        # row = self.constants.get_row_for_value(value, 0)
-        #
-        # if row is None:
-        #     index = self.constants.add_row(value, self.constants.next_index())
-        # else:
-        #     index = self.constants.next_index()
-
         index = self.constants.get_index_of_value(value) if self.constants.contains_value(value) \
             else self.constants.add_and_get_index(value)
 
@@ -88,11 +75,13 @@ class Lexer:
         while True:
             self.read_next_symbol()
 
+            # skip whitespaces
             while self.sym in [' ', '\t']:
                 self.read_next_symbol()
 
             self.add_to_buffer()
 
+            # if EOF then exit
             if len(self.sym) == 0:
                 return
 
@@ -116,6 +105,7 @@ class Lexer:
                 self.error()
 
     def state_2(self):
+        """letter"""
         self.read_next_symbol()
 
         if self.sym.isalpha() or self.sym.isdigit():
@@ -126,6 +116,7 @@ class Lexer:
             self.add_token()
 
     def state_3(self):
+        """digit"""
         self.read_next_symbol()
 
         if self.sym.isdigit():
@@ -139,6 +130,7 @@ class Lexer:
             self.add_constant_token()
 
     def state_4(self):
+        """decimal dot"""
         self.read_next_symbol()
 
         if self.sym.isdigit():
@@ -148,6 +140,7 @@ class Lexer:
             self.error()
 
     def state_5(self):
+        """!"""
         self.read_next_symbol()
 
         if self.sym == '=':
@@ -157,6 +150,7 @@ class Lexer:
             self.error()
 
     def state_6(self):
+        """="""
         self.read_next_symbol()
 
         if self.sym == '=':
@@ -167,6 +161,7 @@ class Lexer:
             self.readNext = False
 
     def state_7(self):
+        """<"""
         self.read_next_symbol()
 
         if self.sym == '=':
@@ -177,6 +172,7 @@ class Lexer:
             self.readNext = False
 
     def state_8(self):
+        """>"""
         self.read_next_symbol()
 
         if self.sym == '=':
@@ -187,6 +183,7 @@ class Lexer:
             self.readNext = False
 
     def state_9(self):
+        """separator"""
         self.add_token()
 
     def state_10(self):
@@ -200,4 +197,4 @@ class Lexer:
             self.state_3()
         else:
             self.readNext = False
-            self.add_token()
+            self.add_constant_token()
