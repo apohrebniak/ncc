@@ -1,6 +1,6 @@
 import sys
 from ncc.token import Token, Word, Constant
-from ncc.table import Table
+from ncc.table import IndTable, ConstantTable
 from ncc.common import *
 
 
@@ -13,8 +13,8 @@ class Lexer:
         self.sym = ''
         self.readNext = True
         self.tokens = []
-        self.ids = Table(3)
-        self.constants = Table(2)
+        self.ids = IndTable()
+        self.constants = ConstantTable()
 
     def add_token(self):
 
@@ -25,15 +25,22 @@ class Lexer:
         else:
 
             value = self.strBuffer
-            row = self.ids.get_row_for_value(value, 0)
+            # row = self.ids.get_row_for_value(value, 0)
+            #
+            # if row is None:
+            #     if len(self.tokens) > 0 and self.tokens[-1].tag in TYPES:
+            #         index = self.ids.add_row(value, self.constants.next_index(), TYPES[self.tokens[-1].tag])
+            #     else:
+            #         self.error("Unknown variable " + self.strBuffer)
+            # else:
+            #     index = row[1]
 
-            if row is None:
-                if len(self.tokens) > 0 and self.tokens[-1].tag in TYPES:
-                    index = self.ids.add_row(value, self.constants.next_index(), TYPES[self.tokens[-1].tag])
-                else:
-                    self.error("Unknown variable " + self.strBuffer)
+            if self.ids.contains_value(value):
+                index = self.ids.get_index_of_value(value)
+            elif len(self.tokens) > 0 and self.tokens[-1].tag in TYPES:
+                index = self.ids.add_and_get_idex(value, TYPES[self.tokens[-1].tag])
             else:
-                index = row[1]
+                self.error("Unknown variable " + self.strBuffer)
 
             self.tokens.append(Word(ID, self.lineNum, value, index))
 
@@ -42,12 +49,15 @@ class Lexer:
     def add_constant_token(self):
 
         value = float(self.strBuffer) if "." in self.strBuffer else int(self.strBuffer)
-        row = self.constants.get_row_for_value(value, 0)
+        # row = self.constants.get_row_for_value(value, 0)
+        #
+        # if row is None:
+        #     index = self.constants.add_row(value, self.constants.next_index())
+        # else:
+        #     index = self.constants.next_index()
 
-        if row is None:
-            index = self.constants.add_row(value, self.constants.next_index())
-        else:
-            index = self.constants.next_index()
+        index = self.constants.get_index_of_value(value) if self.constants.contains_value(value) \
+            else self.constants.add_and_get_index(value)
 
         self.tokens.append(Constant(CONST, self.lineNum, value, index))
 
