@@ -7,12 +7,12 @@ class Token:
 class Word(Token):
     def __init__(self, tag, row_num, lexeme, index):
         super().__init__(tag, row_num)
-        self.lexeme = lexeme
+        self.payload = lexeme
         self.index = index
 
 
 class Constant(Token):
     def __init__(self, tag, row_num, value, index):
         super().__init__(tag, row_num)
-        self.value = value
+        self.payload = value
         self.index = index
