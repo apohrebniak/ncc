@@ -6,7 +6,7 @@ import ncc.common as cmn
 def get_string_repr(d, tag):
     string = list(d.keys())[list(d.values()).index(tag)]
     if string == "\n":
-        string = ""
+        string = "\\n"
     return string
 
 

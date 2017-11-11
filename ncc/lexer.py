@@ -1,8 +1,8 @@
 import sys
 
 from ncc.common import *
-from ncc.table import IndTable, ConstantTable
 from ncc.my_token import Token, Word, Constant
+from ncc.table import IndTable, ConstantTable
 
 
 class Lexer:
@@ -14,7 +14,7 @@ class Lexer:
         self.lineNum = 1
         self.charNum = 0
         self.sym = ''
-        self.readNext = True
+        self.nextSym = None
         self.tokens = []
         self.ids = IndTable()
         self.constants = ConstantTable()
@@ -58,18 +58,24 @@ class Lexer:
         sys.exit(1)
 
     def read_next_symbol(self):
-        if self.readNext:
+        if not self.nextSym:
             self.sym = self.src.read(1)
+        else:
+            self.sym = self.nextSym
+            self.nextSym = None
 
-            if self.sym == '\n':
-                self.lineNum = self.lineNum + 1
-                self.charNum = 0
-            else:
-                self.charNum = self.charNum + 1
-
-        self.readNext = True
+        if self.sym == '\n':
+            self.lineNum = self.lineNum + 1
+            self.charNum = 0
+        else:
+            self.charNum = self.charNum + 1
 
         return self.sym
+
+    def look_next_symbol(self):
+        """just read next symbol """
+        self.nextSym = self.src.read(1)
+        return self.nextSym
 
     def scan(self):
         while True:
@@ -106,34 +112,36 @@ class Lexer:
 
     def state_2(self):
         """letter"""
-        self.read_next_symbol()
+        self.look_next_symbol()
 
-        if self.sym.isalpha() or self.sym.isdigit():
+        if self.nextSym.isalpha() or self.nextSym.isdigit():
+            self.read_next_symbol()
             self.add_to_buffer()
             self.state_2()
         else:
-            self.readNext = False
             self.add_token()
 
     def state_3(self):
         """digit"""
-        self.read_next_symbol()
+        self.look_next_symbol()
 
-        if self.sym.isdigit():
+        if self.nextSym.isdigit():
+            self.read_next_symbol()
             self.add_to_buffer()
             self.state_3()
-        elif self.sym == '.':
+        elif self.nextSym == '.':
+            self.read_next_symbol()
             self.add_to_buffer()
             self.state_4()
         else:
-            self.readNext = False
             self.add_constant_token()
 
     def state_4(self):
         """decimal dot"""
-        self.read_next_symbol()
+        self.look_next_symbol()
 
-        if self.sym.isdigit():
+        if self.nextSym.isdigit():
+            self.read_next_symbol()
             self.add_to_buffer()
             self.state_10()
         else:
@@ -141,9 +149,10 @@ class Lexer:
 
     def state_5(self):
         """!"""
-        self.read_next_symbol()
+        self.look_next_symbol()
 
-        if self.sym == '=':
+        if self.nextSym == '=':
+            self.read_next_symbol()
             self.add_to_buffer()
             self.add_token()
         else:
@@ -151,36 +160,36 @@ class Lexer:
 
     def state_6(self):
         """="""
-        self.read_next_symbol()
+        self.look_next_symbol()
 
-        if self.sym == '=':
+        if self.nextSym == '=':
+            self.read_next_symbol()
             self.add_to_buffer()
             self.add_token()
         else:
             self.add_token()
-            self.readNext = False
 
     def state_7(self):
         """<"""
-        self.read_next_symbol()
+        self.look_next_symbol()
 
-        if self.sym == '=':
+        if self.nextSym == '=':
+            self.read_next_symbol()
             self.add_to_buffer()
             self.add_token()
         else:
             self.add_token()
-            self.readNext = False
 
     def state_8(self):
         """>"""
-        self.read_next_symbol()
+        self.look_next_symbol()
 
-        if self.sym == '=':
+        if self.nextSym == '=':
+            self.read_next_symbol()
             self.add_to_buffer()
             self.add_token()
         else:
             self.add_token()
-            self.readNext = False
 
     def state_9(self):
         """separator"""
@@ -190,11 +199,11 @@ class Lexer:
 
         """exception state for constants"""
 
-        self.read_next_symbol()
+        self.look_next_symbol()
 
-        if self.sym.isdigit():
+        if self.nextSym.isdigit():
+            self.read_next_symbol()
             self.add_to_buffer()
             self.state_3()
         else:
-            self.readNext = False
             self.add_constant_token()
