@@ -42,7 +42,7 @@ class IndTable(Table):
     def __init__(self):
         super().__init__()
 
-    def add_and_get_idex(self, value, type_name):
+    def add_and_get_index(self, value, type_name):
         if value not in self.rows:
             self.rows[value] = self.IndRow(value, type_name, self.index)
             self.index += 1

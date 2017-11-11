@@ -1,12 +1,15 @@
 import sys
-from ncc.token import Token, Word, Constant
-from ncc.table import IndTable, ConstantTable
+
 from ncc.common import *
+from ncc.table import IndTable, ConstantTable
+from ncc.token import Token, Word, Constant
 
 
 class Lexer:
     def __init__(self, src):
+        """source stream"""
         self.src = src
+        """lexeme buffer"""
         self.strBuffer = ''
         self.lineNum = 1
         self.charNum = 0
@@ -18,17 +21,18 @@ class Lexer:
 
     def add_token(self):
 
+        # if lexeme is grammar symbol or word
         if self.strBuffer in SYMBOLS:
             self.tokens.append(Token(SYMBOLS[self.strBuffer], self.lineNum))
         elif self.strBuffer in WORDS:
             self.tokens.append(Token(WORDS[self.strBuffer], self.lineNum))
         else:
-
+            # else assume lexeme is id
             value = self.strBuffer
             if self.ids.contains_value(value):
                 index = self.ids.get_index_of_value(value)
             elif len(self.tokens) > 0 and self.tokens[-1].tag in TYPES:
-                index = self.ids.add_and_get_idex(value, TYPES[self.tokens[-1].tag])
+                index = self.ids.add_and_get_index(value, TYPES[self.tokens[-1].tag])
             else:
                 self.error("Unknown variable " + self.strBuffer)
 
