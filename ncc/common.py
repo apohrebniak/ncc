@@ -12,13 +12,14 @@ WORDS = {"if": IF, "while": WHILE, "do": DO, "in": IN, "out": OUT, "or": OR,
 TYPES = {INT: "int", FLOAT: "float"}
 
 PROGRAM, BLOCK, STMTS, _STMTS, STMT, DECL, _DECL, EXPR, _EXPR, TERM, _TERM, FACTOR, \
-LOG_EXPR, _LOG_EXPR, LOG_TERM, _LOG_TERM, LOG_FACTOR, ARGS, _ARGS, TYPE, _ID, CONSTANT = range(22)
+LOG_EXPR, _LOG_EXPR, LOG_TERM, _LOG_TERM, LOG_FACTOR, _LOG_FACTOR, ARGS, _ARGS, TYPE, _ID, CONSTANT, __DECL = range(24)
 
 NOT_TERMINALS = {"program": PROGRAM, "block": BLOCK, "stmts": STMTS, "_stmts": _STMTS,
                  "stmt": STMT, "decl": DECL, "_decl": DECL, "expr": EXPR, "_expr": _EXPR,
                  "term": TERM, "_term": _TERM, "factor": FACTOR, "log.expr": LOG_EXPR,
                  "_log.expr": _LOG_EXPR, "log.term": LOG_TERM, "_log.term": _LOG_TERM,
-                 "log.factor": LOG_FACTOR, "args": ARGS, "_args": _ARGS, "type": TYPE, "id": _ID, "const": CONSTANT}
+                 "log.factor": LOG_FACTOR, "_log.factor": _LOG_FACTOR, "args": ARGS, "_args": _ARGS, "type": TYPE,
+                 "id": _ID, "const": CONSTANT, "__decl": __DECL}
 
 
 def get_key_by_value(d, tag):

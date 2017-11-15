@@ -2,7 +2,7 @@ import sys
 
 from ncc.common import *
 from ncc.my_token import Token, Word, Constant
-from ncc.table import IndTable, ConstantTable
+from ncc.environment import IndTable, ConstantTable
 
 
 class Lexer:
