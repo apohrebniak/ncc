@@ -1,290 +1,335 @@
+import sys
+
 import ncc.common as cmn
 import ncc.my_token as tkn
 
 
-class Syntaxer:
-    def __init__(self, ids, consts):
-        self.tokens = None
-        self.ids = ids
-        self.consts = consts
-        self.tokensLen = 0
-        self.functions = {"program": self.program,
-                          "block": self.block,
-                          "stmts": self.statements,
-                          "_stmts": self.statements_trait,
-                          "stmt": self.statement,
-                          "decl": self.declaration,
-                          "_decl": self.declaration_trait,
-                          "__decl": self.declaration_trait_trait,
-                          "expr": self.expression,
-                          "_expr": self.expression_trait,
-                          "term": self.term,
-                          "_term": self.term_trait,
-                          "factor": self.factor,
-                          "log.expr": self.log_expression,
-                          "_log.expr": self.log_expression_trait,
-                          "log.term": self.log_term,
-                          "_log.term": self.log_term_trait,
-                          "log.factor": self.log_factor,
-                          "_log.factor": self.log_factor_trait,
-                          "args": self.args,
-                          "_args": self.args_trait,
-                          "type": self.type,
-                          "id": self.id,
-                          "const": self.const}
-        self.symbols_by_tag = {v: k for k, v in cmn.SYMBOLS.items()}
-        self.words_by_tag = {v: k for k, v in cmn.WORDS.items()}
-
-    def analyze_tokens(self, tokens):
+class Parser():
+    def __init__(self, tokens, idsTable, constTable):
         self.tokens = tokens
-        self.tokensLen = len(tokens)
+        self.ids = idsTable
+        self.consts = constTable
+        self.symbols = {v: k for k, v in cmn.SYMBOLS.items()}
+        self.words = {v: k for k, v in cmn.WORDS.items()}
 
-        _, error_token = self.program(0)
+    def parse(self):
+        self.is_program(0)
 
-        if error_token is not None:
-            print("Error at row: {}".format(self.tokens[error_token].row_num))
-        else:
-            print("Correct syntax")
+    def is_program(self, i):
+        curr_index = i
+        return self.is_block(curr_index)
 
-    def is_symbol(self, symbol, tag):
-        if tag in self.symbols_by_tag:
-            return symbol == self.symbols_by_tag[tag]
-        else:
-            False
+    def is_block(self, i):
+        curr_index = i
+        if self.get_token_tag(curr_index) == cmn.SYMBOLS["{"]:
 
-    def is_word(self, symbol, tag):
-        if tag in self.words_by_tag:
-            return symbol == self.words_by_tag[tag]
-        else:
-            False
-
-    def func(self, prods, i):
-        current_token_index = i
-        is_production_found = False
-        max_token_where_error_occurred = None
-        is_any_symbol_from_any_production_succeded = False
-        for prod in prods:
-            is_production_valid = True
-            for symbol in prod:
-
-                # Seems like, if error occurred if token witch index is lower or equals to current index + 1
-                # then empty production is acceptable. lulz let it be for now
-                if symbol is None and not is_any_symbol_from_any_production_succeded:
-                    break
-                    # if max_token_where_error_occurred is not None:
-                    #     if current_token_index + 1 >= max_token_where_error_occurred:
-                    #         break
-                    # else:
-                    #     break
-
-                if symbol in cmn.NOT_TERMINALS:
-
-                    current_token_index, error_token_index = self.functions[symbol](current_token_index)
-                    if error_token_index is not None:
-                        max_token_where_error_occurred = max([max_token_where_error_occurred, error_token_index]) \
-                            if max_token_where_error_occurred is not None else error_token_index
-                        current_token_index = i
-                        is_production_valid = False
-                        break  # is production is invalid
-
-                elif current_token_index < self.tokensLen and (
-                            self.is_symbol(symbol, self.tokens[current_token_index].tag) or self.is_word(symbol,
-                                                                                                         self.tokens[
-                                                                                                             current_token_index].tag)):
-                    current_token_index += 1
-                else:
-                    current_token_index = i
-                    is_production_valid = False
-                    break  # is production is invalid
-
-                is_any_symbol_from_any_production_succeded = True
-
-            if is_production_valid:
-                is_production_found = True
-                break
-
-        # check if production is found
-        if not is_production_found:
-            # production wasn't found. return an error token index
-            if max_token_where_error_occurred is not None and current_token_index < max_token_where_error_occurred:
-                return current_token_index, max_token_where_error_occurred
+            # empty block
+            if self.get_token_tag(curr_index + 1) == cmn.SYMBOLS["}"]:
+                return curr_index + 2, True
             else:
-                return current_token_index, current_token_index
+                index, res = self.is_stmts(curr_index + 1)
+                if not res:
+                    self.error(curr_index)
+                else:
+                    curr_index = index
+
+            # stmts
+            if self.get_token_tag(curr_index) == cmn.SYMBOLS["}"]:
+                return curr_index + 1, True
+            else:
+                self.error(curr_index)
+
         else:
-            # seems good
-            return current_token_index, None
+            return curr_index, False
 
-    def program(self, i):
-        prods = [["block"]]
+    def is_stmts(self, i):
+        curr_index = i
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+        # statement
+        index, res = self.is_stmt(curr_index)
+        if not res:
+            self.error(index)
+        else:
+            curr_index = index
 
-    def block(self, i):
-        prods = [["{", "stmts", "}"],
-                 ["{", "}"]]
+        # statements
+        while self.get_token_tag(curr_index) == cmn.SYMBOLS["\n"]:
+            index, res = self.is_stmts(curr_index + 1)
+            if res:
+                curr_index = index
+            else:
+                return curr_index + 1, False
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+        return curr_index, True
 
-    def statements(self, i):
-        prods = [["\n", "stmt", "_stmts"]]
+    def is_stmt(self, i):
+        curr_index = i
+        # block
+        index, res = self.is_block(curr_index)
+        if not res:
+            # if
+            index, res = self.is_stmt_if(curr_index)
+            if not res:
+                # while
+                index, res = self.is_stmt_while(curr_index)
+                if not res:
+                    # decl
+                    index, res = self.is_stmt_decl(curr_index)
+                    if not res:
+                        # assing
+                        index, res = self.is_stmt_assign(curr_index)
+                        if not res:
+                            # in
+                            index, res = self.is_stmt_in(curr_index)
+                            if not res:
+                                # out
+                                index, res = self.is_stmt_out(curr_index)
+                                if not res:
+                                    # error
+                                    self.error(curr_index)
+        return index, True
 
-        res, error_token = self.func(prods, i)
+    def is_stmt_if(self, i):
+        curr_index = i
+        if self.get_token_tag(curr_index) == cmn.WORDS["if"]:
+            index, res = self.is_log_expr(curr_index + 1)
+            if res:
+                curr_index = index
+                if self.get_token_tag(curr_index) == cmn.SYMBOLS["?"]:
+                    index, res = self.is_block(curr_index + 1)
+                    if res:
+                        curr_index = index
+                        if self.get_token_tag(curr_index) == cmn.SYMBOLS[":"]:
+                            index, res = self.is_block(curr_index + 1)
+                            if res:
+                                curr_index = index
+                                return curr_index, True
+        return i, False
 
-        return res, error_token
+    def is_stmt_while(self, i):
+        curr_index = i
+        if self.get_token_tag(curr_index) == cmn.WORDS["while"]:
+            index, res = self.is_log_expr(curr_index + 1)
+            if res:
+                curr_index = index
+                if self.get_token_tag(curr_index) == cmn.WORDS["do"]:
+                    index, res = self.is_block(curr_index + 1)
+                    if res:
+                        curr_index = index
+                        return curr_index, True
+        return i, False
 
-    def statements_trait(self, i):
-        prods = [["stmts", "_stmts"],
-                 [None]]
+    def is_stmt_decl(self, i):
+        curr_index = i
+        index, res = self.is_type(curr_index)
+        if res:
+            curr_index = index
+            index, res = self.is_id(curr_index)
+            if res:
+                curr_index = index
+                if self.get_token_tag(curr_index) == cmn.SYMBOLS["="]:
+                    index, res = self.is_expr(curr_index + 1)
+                    if res:
+                        curr_index = index
+                        return curr_index, True
+                    else:
+                        return i, False
+                else:
+                    return curr_index, True
+        return i, False
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+    def is_stmt_assign(self, i):
+        curr_index = i
+        index, res = self.is_id(curr_index)
+        if res:
+            curr_index = index
+            if self.get_token_tag(curr_index) == cmn.SYMBOLS["="]:
+                index, res = self.is_expr(curr_index + 1)
+                if res:
+                    curr_index = index
+                    return curr_index, True
+        return i, False
 
-    def statement(self, i):
-        prods = [["block"],
-                 ["if", "log.expr", "?", "block", ":", "block"],
-                 ["while", "log.expr", "do", "block"],
-                 ["decl"],
-                 ["id", "=", "expr"],
-                 ["in", "(", "args", ")"],
-                 ["out", "(", "args", ")"]]
+    def is_stmt_in(self, i):
+        curr_index = i
+        if self.get_token_tag(curr_index) == cmn.WORDS["in"]:
+            if self.get_token_tag(curr_index + 1) == cmn.SYMBOLS["("]:
+                index, res = self.is_args(curr_index + 2)
+                if res:
+                    curr_index = index
+                    if self.get_token_tag(curr_index) == cmn.SYMBOLS[")"]:
+                        return curr_index + 1, True
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+        return i, False
 
-    def declaration(self, i):
-        prods = [["type", "_decl"]]
+    def is_stmt_out(self, i):
+        curr_index = i
+        if self.get_token_tag(curr_index) == cmn.WORDS["out"]:
+            if self.get_token_tag(curr_index + 1) == cmn.SYMBOLS["("]:
+                index, res = self.is_args(curr_index + 2)
+                if res:
+                    curr_index = index
+                    if self.get_token_tag(curr_index) == cmn.SYMBOLS[")"]:
+                        return curr_index + 1, True
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+        return i, False
 
-    def declaration_trait(self, i):
-        prods = [["id", "__decl"]]
+    def is_expr(self, i):
+        curr_index = i
+        if self.get_token_tag(curr_index) == cmn.SYMBOLS["-"]:
+            curr_index += 1
+        index, res = self.is_term(curr_index)
+        if res:
+            curr_index = index
+            while self.get_token_tag(curr_index) == cmn.SYMBOLS["+"] or \
+                            self.get_token_tag(curr_index) == cmn.SYMBOLS["-"]:
+                index, res = self.is_term(curr_index + 1)
+                if res:
+                    curr_index = index
+                    return curr_index, True
+                else:
+                    return curr_index, False
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+            return curr_index, True
 
-    def declaration_trait_trait(self, i):
-        prods = [["=", "expr"],
-                 [None]]
+        return i, False
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+    def is_term(self, i):
+        curr_index = i
+        index, res = self.is_factor(curr_index)
+        if res:
+            curr_index = index
+            while self.get_token_tag(curr_index) == cmn.SYMBOLS["*"] or \
+                            self.get_token_tag(curr_index) == cmn.SYMBOLS["/"]:
+                index, res = self.is_factor(curr_index + 1)
+                if res:
+                    curr_index = index
+                    return curr_index, True
+                else:
+                    return curr_index, False
 
-    def expression(self, i):
-        prods = [["-", "term", "_expr"],
-                 ["term", "_expr"]]
+            return curr_index, True
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+        return i, False
 
-    def expression_trait(self, i):
-        prods = [["+", "term", "_expr"],
-                 ["-", "term", "_expr"],
-                 [None]]
+    def is_factor(self, i):
+        curr_index = i
+        index, res = self.is_id(curr_index)
+        if not res:
+            index, res = self.is_const(curr_index)
+            if not res:
+                if self.get_token_tag(curr_index) == cmn.SYMBOLS["("]:
+                    index, res = self.is_expr(curr_index + 1)
+                    if res:
+                        curr_index = index
+                        if self.get_token_tag(curr_index) == cmn.SYMBOLS[")"]:
+                            return curr_index + 1, True
+                        else:
+                            return curr_index, False
+                    else:
+                        return curr_index, False
+                else:
+                    return curr_index, False
+        return index, True
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+    def is_log_expr(self, i):
+        curr_index = i
+        index, res = self.is_log_term(curr_index)
+        if res:
+            curr_index = index
+            while self.get_token_tag(curr_index) == cmn.WORDS["or"]:
+                index, res = self.is_log_term(curr_index + 1)
+                if res:
+                    curr_index = index
+                else:
+                    return curr_index + 1, False
+            return curr_index, True
+        return i, False
 
-    def term(self, i):
-        prods = [["factor", "_term"]]
+    def is_log_term(self, i):
+        curr_index = i
+        index, res = self.is_log_factor(curr_index)
+        if res:
+            curr_index = index
+            while self.get_token_tag(curr_index) == cmn.WORDS["and"]:
+                index, res = self.is_log_factor(curr_index + 1)
+                if res:
+                    curr_index = index
+                else:
+                    return curr_index + 1, False
+            return curr_index, True
+        return i, False
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+    def is_log_factor(self, i):
+        curr_index = i
+        if self.get_token_tag(curr_index) == cmn.WORDS["not"]:
+            curr_index += 1
 
-    def term_trait(self, i):
-        prods = [["*", "factor", "_term"],
-                 ["/", "factor", "_term"],
-                 [None]]
+        if self.get_token_tag(curr_index) == cmn.SYMBOLS["["]:
+            index, res = self.is_log_expr(curr_index + 1)
+            if res:
+                curr_index = index
+                if self.get_token_tag(curr_index) == cmn.SYMBOLS["]"]:
+                    return curr_index + 1, True
+                else:
+                    return curr_index, False
+            else:
+                return curr_index + 1, False
+        else:
+            index, res = self.is_expr(curr_index)
+            if res:
+                curr_index = index
+                while self.get_token_tag(curr_index) in [cmn.SYMBOLS[">"], cmn.SYMBOLS["<"], cmn.SYMBOLS[">="],
+                                                         cmn.SYMBOLS["<="], cmn.SYMBOLS["=="], cmn.SYMBOLS["!="]]:
+                    index, res = self.is_expr(curr_index + 1)
+                    if res:
+                        curr_index = index
+                    else:
+                        return curr_index + 1, False
+                return curr_index, True
+            else:
+                return curr_index, False
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
+    def is_args(self, i):
+        curr_index = i
+        index, res = self.is_id(curr_index)
+        if res:
+            curr_index = index
+            while self.get_token_tag(curr_index) == cmn.SYMBOLS[","]:
+                index, res = self.is_id(curr_index + 1)
+                if res:
+                    curr_index = index
+                else:
+                    return curr_index + 1, False
+            return curr_index, True
+        return i, False
 
-    def factor(self, i):
-        prods = [["(", "expr", ")"],
-                 ["id"],
-                 ["const"]]
+    def is_type(self, i):
+        curr_index = i
+        if self.get_token_tag(curr_index) == cmn.WORDS["int"] or \
+                        self.get_token_tag(curr_index) == cmn.WORDS["float"]:
+            return curr_index + 1, True
+        return i, False
 
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def log_expression(self, i):
-        prods = [["log.term", "_log.expr"]]
-
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def log_expression_trait(self, i):
-        prods = [["or", "log.term", "_log.expr"],
-                 [None]]
-
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def log_term(self, i):
-        prods = [["log.factor", "_log.term"]]
-
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def log_term_trait(self, i):
-        prods = [["and", "log.factor", "_log.term"],
-                 [None]]
-
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def log_factor(self, i):  # TODO: this
-        prods = [["not", "[", "log.expr", "]"],
-                 ["not", "expr", "_log.factor"],
-                 ["[", "log.expr", "]"],
-                 ["expr", "_log.factor"]]
-
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def log_factor_trait(self, i):
-        prods = [[">", "expr"],
-                 [">=", "expr"],
-                 ["<", "expr"],
-                 ["<=", "expr"],
-                 ["==", "expr"],
-                 ["!=", "expr"]]
-
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def args(self, i):
-        prods = [["id", "_args"]]
-
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def args_trait(self, i):
-        prods = [[",", "id", "_args"],
-                 [None]]
-
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def type(self, i):
-        prods = [["int"],
-                 ["float"]]
-
-        res, error_token = self.func(prods, i)
-        return res, error_token
-
-    def id(self, i):
+    def is_id(self, i):
         token = self.tokens[i]
         if isinstance(token, tkn.Word) and self.ids.contains_value(token.payload):
-            return i + 1, None
+            return i + 1, True
         else:
-            return i, i
+            return i, False
 
-    def const(self, i):
+    def is_const(self, i):
         token = self.tokens[i]
         if isinstance(token, tkn.Constant) and self.consts.contains_value(token.payload):
-            return i + 1, None
+            return i + 1, True
         else:
-            return i, i
+            return i, False
+
+    def get_token_tag(self, index):
+        if index >= len(self.tokens):
+            self.error(index - 1)
+        return self.tokens[index].tag
+
+    def error(self, index):
+        print("Unexpected symbol at row: {}".format(self.tokens[index].row_num))
+        sys.exit(1)
