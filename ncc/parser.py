@@ -262,7 +262,7 @@ class Parser():
 
     def is_log_factor(self, i):
         curr_index = i
-        if self.get_token_tag(curr_index) == cmn.WORDS["not"]:
+        while self.get_token_tag(curr_index) == cmn.WORDS["not"]:
             curr_index += 1
 
         if self.get_token_tag(curr_index) == cmn.SYMBOLS["["]:
