@@ -3,6 +3,8 @@ import sys
 import ncc.common as cmn
 import ncc.my_token as tkn
 
+"""Recursive descend parser"""
+
 
 class Parser():
     def __init__(self, tokens, idsTable, constTable):
@@ -182,7 +184,7 @@ class Parser():
         if res:
             curr_index = index
             while self.get_token_tag(curr_index) == cmn.SYMBOLS["+"] or \
-                            self.get_token_tag(curr_index) == cmn.SYMBOLS["-"]:
+                    self.get_token_tag(curr_index) == cmn.SYMBOLS["-"]:
                 index, res = self.is_term(curr_index + 1)
                 if res:
                     curr_index = index
@@ -200,7 +202,7 @@ class Parser():
         if res:
             curr_index = index
             while self.get_token_tag(curr_index) == cmn.SYMBOLS["*"] or \
-                            self.get_token_tag(curr_index) == cmn.SYMBOLS["/"]:
+                    self.get_token_tag(curr_index) == cmn.SYMBOLS["/"]:
                 index, res = self.is_factor(curr_index + 1)
                 if res:
                     curr_index = index
@@ -279,8 +281,12 @@ class Parser():
             index, res = self.is_expr(curr_index)
             if res:
                 curr_index = index
-                while self.get_token_tag(curr_index) in [cmn.SYMBOLS[">"], cmn.SYMBOLS["<"], cmn.SYMBOLS[">="],
-                                                         cmn.SYMBOLS["<="], cmn.SYMBOLS["=="], cmn.SYMBOLS["!="]]:
+                while self.get_token_tag(curr_index) in [cmn.SYMBOLS[">"],
+                                                         cmn.SYMBOLS["<"],
+                                                         cmn.SYMBOLS[">="],
+                                                         cmn.SYMBOLS["<="],
+                                                         cmn.SYMBOLS["=="],
+                                                         cmn.SYMBOLS["!="]]:
                     index, res = self.is_expr(curr_index + 1)
                     if res:
                         curr_index = index
@@ -307,20 +313,22 @@ class Parser():
     def is_type(self, i):
         curr_index = i
         if self.get_token_tag(curr_index) == cmn.WORDS["int"] or \
-                        self.get_token_tag(curr_index) == cmn.WORDS["float"]:
+                self.get_token_tag(curr_index) == cmn.WORDS["float"]:
             return curr_index + 1, True
         return i, False
 
     def is_id(self, i):
         token = self.tokens[i]
-        if isinstance(token, tkn.Word) and self.ids.contains_value(token.payload):
+        if isinstance(token, tkn.Word) and self.ids.contains_value(
+            token.payload):
             return i + 1, True
         else:
             return i, False
 
     def is_const(self, i):
         token = self.tokens[i]
-        if isinstance(token, tkn.Constant) and self.consts.contains_value(token.payload):
+        if isinstance(token, tkn.Constant) and self.consts.contains_value(
+            token.payload):
             return i + 1, True
         else:
             return i, False
