@@ -31,7 +31,7 @@ class Parser():
             else:
                 index, res = self.is_stmts(curr_index + 1)
                 if not res:
-                    self.error(curr_index)
+                    self.error("Not a statement", curr_index + 1)
                 else:
                     curr_index = index
 
@@ -39,7 +39,7 @@ class Parser():
             if self.get_token_tag(curr_index) == cmn.SYMBOLS["}"]:
                 return curr_index + 1, True
             else:
-                self.error(curr_index)
+                self.error("'}' expected", curr_index)
 
         else:
             return curr_index, False
@@ -49,9 +49,7 @@ class Parser():
 
         # statement
         index, res = self.is_stmt(curr_index)
-        if not res:
-            self.error(index)
-        else:
+        if res:
             curr_index = index
 
         # statements
@@ -88,7 +86,7 @@ class Parser():
                                 index, res = self.is_stmt_out(curr_index)
                                 if not res:
                                     # error
-                                    self.error(curr_index)
+                                    self.cannot_resolve_symbol_at(curr_index)
         return index, True
 
     def is_stmt_if(self, i):
@@ -106,6 +104,16 @@ class Parser():
                             if res:
                                 curr_index = index
                                 return curr_index, True
+                            else:
+                                self.error("'{' expected", curr_index + 1)
+                        else:
+                            self.error("':' expected", curr_index)
+                    else:
+                        self.error("'{' expected", curr_index + 1)
+                else:
+                    self.error("'?' expected", curr_index)
+            else:
+                self.error("'[' expression expected", curr_index + 1)
         return i, False
 
     def is_stmt_while(self, i):
@@ -119,6 +127,12 @@ class Parser():
                     if res:
                         curr_index = index
                         return curr_index, True
+                    else:
+                        self.error("Block expected", curr_index + 1)
+                else:
+                    self.error("'do' expected", curr_index)
+            else:
+                self.error("Logic expression expected", curr_index + 1)
         return i, False
 
     def is_stmt_decl(self, i):
@@ -135,9 +149,11 @@ class Parser():
                         curr_index = index
                         return curr_index, True
                     else:
-                        return i, False
+                        self.error("Expression expected", curr_index + 1)
                 else:
                     return curr_index, True
+            else:
+                self.error("Variable expected", curr_index)
         return i, False
 
     def is_stmt_assign(self, i):
@@ -150,6 +166,10 @@ class Parser():
                 if res:
                     curr_index = index
                     return curr_index, True
+                else:
+                    self.error("Expression expected", curr_index + 1)
+            else:
+                self.error("'=' expected", curr_index)
         return i, False
 
     def is_stmt_in(self, i):
@@ -161,6 +181,12 @@ class Parser():
                     curr_index = index
                     if self.get_token_tag(curr_index) == cmn.SYMBOLS[")"]:
                         return curr_index + 1, True
+                    else:
+                        self.error("')' expected", curr_index)
+                else:
+                    self.error("Arguments expected", curr_index + 1)
+            else:
+                self.error("'(' expected", curr_index + 1)
 
         return i, False
 
@@ -173,6 +199,12 @@ class Parser():
                     curr_index = index
                     if self.get_token_tag(curr_index) == cmn.SYMBOLS[")"]:
                         return curr_index + 1, True
+                    else:
+                        self.error("')' expected", curr_index)
+                else:
+                    self.error("Arguments expected", curr_index + 2)
+            else:
+                self.error("'(' expected", curr_index + 1)
 
         return i, False
 
@@ -190,7 +222,7 @@ class Parser():
                     curr_index = index
                     return curr_index, True
                 else:
-                    return curr_index, False
+                    self.error("Expression expected", curr_index + 1)
 
             return curr_index, True
 
@@ -208,7 +240,7 @@ class Parser():
                     curr_index = index
                     return curr_index, True
                 else:
-                    return curr_index, False
+                    self.error("Expression expected", curr_index + 1)
 
             return curr_index, True
 
@@ -227,9 +259,9 @@ class Parser():
                         if self.get_token_tag(curr_index) == cmn.SYMBOLS[")"]:
                             return curr_index + 1, True
                         else:
-                            return curr_index, False
+                            self.error("')' expected", curr_index)
                     else:
-                        return curr_index, False
+                        self.error("Expression expected", curr_index + 1)
                 else:
                     return curr_index, False
         return index, True
@@ -244,7 +276,7 @@ class Parser():
                 if res:
                     curr_index = index
                 else:
-                    return curr_index + 1, False
+                    self.error("Logic expression expected", curr_index + 1)
             return curr_index, True
         return i, False
 
@@ -258,7 +290,7 @@ class Parser():
                 if res:
                     curr_index = index
                 else:
-                    return curr_index + 1, False
+                    self.error("Logic expression expected", curr_index + 1)
             return curr_index, True
         return i, False
 
@@ -274,9 +306,9 @@ class Parser():
                 if self.get_token_tag(curr_index) == cmn.SYMBOLS["]"]:
                     return curr_index + 1, True
                 else:
-                    return curr_index, False
+                    self.error("']' expected", curr_index)
             else:
-                return curr_index + 1, False
+                self.error("Logic expression expected", curr_index + 1)
         else:
             index, res = self.is_expr(curr_index)
             if res:
@@ -291,7 +323,7 @@ class Parser():
                     if res:
                         curr_index = index
                     else:
-                        return curr_index + 1, False
+                        self.error("Expression expected", curr_index + 1)
                 return curr_index, True
             else:
                 return curr_index, False
@@ -335,9 +367,15 @@ class Parser():
 
     def get_token_tag(self, index):
         if index >= len(self.tokens):
-            self.error(index - 1)
+            return cmn.SYMBOLS["@"]
         return self.tokens[index].tag
 
-    def error(self, index):
-        print("Unexpected symbol at row: {}".format(self.tokens[index].row_num))
+    def error(self, message, index):
+        token = self.tokens[index] if index < len(self.tokens) else self.tokens[
+            -1]
+        print(message, "at {}:{}".format(token.row_num, token.column_num))
         sys.exit(1)
+
+    def cannot_resolve_symbol_at(self, index):
+        token = self.tokens[index]
+        self.error("Cannot resolve symbol '{}'".format(token.payload), index)

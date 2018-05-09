@@ -23,22 +23,24 @@ class Lexer:
 
   def add_token(self):
 
+    lexeme = self._strBuffer
     # if lexeme is grammar symbol or word
-    if self._strBuffer in SYMBOLS:
-      self.tokens.append(Token(SYMBOLS[self._strBuffer], self.lineNum))
-    elif self._strBuffer in WORDS:
-      self.tokens.append(Token(WORDS[self._strBuffer], self.lineNum))
+    if lexeme in SYMBOLS:
+        self.tokens.append(
+            Token(SYMBOLS[lexeme], self.lineNum, self.charNum, lexeme))
+    elif lexeme in WORDS:
+        self.tokens.append(
+            Token(WORDS[lexeme], self.lineNum, self.charNum, lexeme))
     else:
       # else assume lexeme is id
-      value = self._strBuffer
-      if self.ids.contains_value(value):
-        index = self.ids.get_index_of_value(value)
+      if self.ids.contains_value(lexeme):
+          index = self.ids.get_index_of_value(lexeme)
       elif len(self.tokens) > 0 and self.tokens[-1].tag in TYPES:
-        index = self.ids.add_and_get_index(value, TYPES[self.tokens[-1].tag])
+          index = self.ids.add_and_get_index(lexeme, TYPES[self.tokens[-1].tag])
       else:
-        self.error("Unknown variable " + self._strBuffer)
+          self.error("Unknown variable '{}'".format(lexeme))
 
-      self.tokens.append(Word(ID, self.lineNum, value, index))
+      self.tokens.append(Word(ID, self.lineNum, self.charNum, lexeme, index))
 
     self._strBuffer = ""
 
@@ -50,7 +52,8 @@ class Lexer:
         value) if self.constants.contains_value(value) \
       else self.constants.add_and_get_index(value)
 
-    self.tokens.append(Constant(CONST, self.lineNum, value, index))
+    self.tokens.append(
+        Constant(CONST, self.lineNum, self.charNum, value, index))
 
     self._strBuffer = ""
 
@@ -58,7 +61,7 @@ class Lexer:
     self._strBuffer = self._strBuffer + self._sym
 
   def error(self, msg="Lexer error!"):
-    print(msg, " at", self.lineNum, ":", self.charNum)
+    print(msg, "at {}:{}".format(self.lineNum, self.charNum))
     sys.exit(1)
 
   def read_next_symbol(self):

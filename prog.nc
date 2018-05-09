@@ -1,8 +1,6 @@
-{{{{{{{int y
-    float a
-    float aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-    if [5 > 6 and 6 < 4] ? {while a > y do {in(a, y)
-        float rrrr
-        out(rrrr)}} : {while 5 > 5 do {while [6 * 4 > 5] do {float q
-            int ee
-            int ppp}}}}}}}}}}
+{ int i = 0
+  int x = 1
+  while [i < 10 and [6 >= x]] do { out(i)
+                      i = i + 1}
+  float y
+  y=4 * 4}

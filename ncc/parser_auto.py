@@ -2,7 +2,7 @@ import sys
 
 import ncc.common as cmn
 
-
+"""deprecated"""
 class Action:
     def __init__(self, aState=None, label=None, bState=None, toStack=None,
         eq=None, neq=None):
