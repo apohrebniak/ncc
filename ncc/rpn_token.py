@@ -1,3 +1,5 @@
+import ncc.common as cmn
+
 class RPNToken:
     def __init__(self, rtag, ltag, prio, lexeme):
         self.rtag = rtag
@@ -27,4 +29,26 @@ class RPNIdentity:
 
     def __repr__(self):
         return str(self.lexeme)
-        # metka
+
+
+class RPNLabel:
+    def __init__(self, index):
+        self.index = index
+
+    def __repr__(self):
+        return "lbl_" + str(self.index)
+
+
+class RPNJumpOperator:
+    def __init__(self, rtag):
+        self.rtag = rtag
+
+    def __repr__(self):
+        return "JMPF" if self.rtag == cmn.R_JMPF else "JMP"
+
+
+class RPNCombinedToken:
+    def __init__(self, if_token):
+        self.if_token = if_token
+        self.prio = if_token.prio
+        self.tokens = []

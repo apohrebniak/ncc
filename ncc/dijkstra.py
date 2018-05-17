@@ -11,6 +11,8 @@ class DijkstraRPNBuilder:
         self.rpn = []
         self.stack = []
         self.lexeme_function_map = self.build_lexeme_function_map()
+        self.next_label_index = 0
+        self.labels_stack = []
 
     def build_lexeme_function_map(self):
         return {
@@ -25,28 +27,29 @@ class DijkstraRPNBuilder:
             cmn.INT: self.common,
             cmn.FLOAT: self.common,
             cmn.ASSIGN: self.common,
-            cmn.LSB: self.foo,
-            cmn.RSB: self.foo,
+            cmn.LSB: self.left_square_bracket,
+            cmn.RSB: self.right_square_bracket,
             cmn.WHILE: self.foo,
             cmn.DO: self.foo,
             cmn.IN: self.foo,
             cmn.OUT: self.foo,
-            cmn.OR: self.foo,
-            cmn.AND: self.foo,
-            cmn.NOT: self.foo,
-            cmn.IF: self.foo,
-            cmn.DOTS: self.foo,
-            cmn.EQ: self.foo,
-            cmn.NEQ: self.foo,
-            cmn.LOW: self.foo,
-            cmn.LOWEQ: self.foo,
-            cmn.HI: self.foo,
-            cmn.HIEQ: self.foo,
-            cmn.QM: self.foo,
+            cmn.OR: self.common,
+            cmn.AND: self.common,
+            cmn.NOT: self.common,
+            cmn.IF: self.if_oper,
+            cmn.QM: self.question_mark,
+            cmn.DOTS: self.dots,
+            cmn.EQ: self.common,
+            cmn.NEQ: self.common,
+            cmn.LOW: self.common,
+            cmn.LOWEQ: self.common,
+            cmn.HI: self.common,
+            cmn.HIEQ: self.common,
             cmn.COMMA: self.foo,
         }
 
     """Common function for token"""
+
     def common(self, ltoken):
         if ltoken.payload in cmn.RPN_SYMBOLS:
             rtag = cmn.RPN_SYMBOLS[ltoken.payload]
@@ -100,6 +103,78 @@ class DijkstraRPNBuilder:
     #             break
     #     self.stack.append(rtoken)
 
+    def if_oper(self, ltoken):
+        rtoken = rpntoken.RPNToken(cmn.R_IF, ltoken.tag,
+                                   cmn.RPN_PRIORITIES[cmn.R_IF],
+                                   ltoken.payload)
+
+        while len(self.stack) != 0:
+            if self.stack[-1].prio >= rtoken.prio:
+                self.rpn.append(self.stack.pop())
+            else:
+                break
+        combined_token = rpntoken.RPNCombinedToken(rtoken)
+        self.stack.append(combined_token)  # have '[if]' in stack
+
+    def question_mark(self, ltoken):
+        rtoken = rpntoken.RPNToken(cmn.R_QM, ltoken.tag,
+                                   cmn.RPN_PRIORITIES[cmn.R_QM],
+                                   ltoken.payload)
+
+        while len(self.stack) != 0:
+            if self.stack[-1].prio >= rtoken.prio:
+                self.rpn.append(self.stack.pop())
+            else:
+                break
+
+        # have '[if]' in stack
+
+        label = self.build_next_label()
+        jump_false_oper = rpntoken.RPNJumpOperator(cmn.R_JMPF)
+
+        self.labels_stack.append(label)
+        self.rpn.append(label)
+        self.rpn.append(jump_false_oper)
+        # self.add_label_to_table(label) #TODO
+        self.stack[-1].tokens.append(label)  # have [if m1] in stack
+
+    def dots(self, ltoken):
+        rtoken = rpntoken.RPNToken(cmn.R_DOTS, ltoken.tag,
+                                   cmn.RPN_PRIORITIES[cmn.R_DOTS],
+                                   ltoken.payload)
+
+        while len(self.stack) != 0:
+            if self.stack[-1].prio >= rtoken.prio:
+                self.rpn.append(self.stack.pop())
+            else:
+                break
+
+        # have '[if m1]' in stack
+
+        label = self.build_next_label()
+        jump_oper = rpntoken.RPNJumpOperator(cmn.R_JMP)
+
+        self.rpn.append(label)
+        self.rpn.append(jump_oper)
+        self.rpn.append(self.labels_stack.pop())
+        # self.add_label_to_table(label) #TODO
+        self.stack[-1].tokens.append(label)  # have [if m1 m2] in stack
+
+    def left_square_bracket(self, ltoken):
+        self.stack.append(
+            rpntoken.RPNToken(cmn.R_LSB, ltoken.tag,
+                              cmn.RPN_PRIORITIES[cmn.R_LSB],
+                              ltoken.payload))
+
+    def right_square_bracket(self, ltoken):
+        rtoken = rpntoken.RPNToken(cmn.R_RSB, ltoken.tag,
+                                   cmn.RPN_PRIORITIES[cmn.R_RSB],
+                                   ltoken.payload)
+        while self.stack[-1].ltag != cmn.LSB:
+            if self.stack[-1].prio >= rtoken.prio:
+                self.rpn.append(self.stack.pop())
+        self.stack.pop()
+
     def left_figure_bracket(self, ltoken):
         self.stack.append(
             rpntoken.RPNToken(cmn.R_LFB, ltoken.tag,
@@ -114,6 +189,15 @@ class DijkstraRPNBuilder:
             if self.stack[-1].prio >= rtoken.prio:
                 self.rpn.append(self.stack.pop())
         self.stack.pop()
+
+        # FIXME workaround for ifs. If closing the "else" block, check for labels in stack
+        while len(self.stack) != 0 and isinstance(self.stack[-1],
+                                                  rpntoken.RPNCombinedToken):
+            if len(self.stack[-1].tokens) == 2:
+                self.rpn.append(self.stack[-1].tokens[-1])
+                self.stack.pop()
+            else:
+                break
 
     def left_bracket(self, ltoken):
         self.stack.append(
@@ -195,9 +279,16 @@ class DijkstraRPNBuilder:
             self.rpn.append(self.stack.pop())
         return self.rpn
 
+    def build_next_label(self):
+        label = rpntoken.RPNLabel(index=self.next_label_index)
+        self.next_label_index = self.next_label_index + 1
+        return label
+
+    def add_label_to_table(self, label):
+        self.labels_stack.append(label)
+
 
 if __name__ == "__main__":
-
     tokens = [lexertoken.Token(cmn.LFB, 0, 0, '{'),
               # lexertoken.Token(cmn.LB, 0, 0, '('),
               # lexertoken.Constant(cmn.ID, 0, 0, 1, 0),

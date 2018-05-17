@@ -22,15 +22,34 @@ TYPES = {
 
 # RPN specific symbols
 R_ALB, R_ARB, R_PLUS, R_MINUS, R_MUL, R_DIV, R_LFB, R_RFB, \
-    R_INT, R_FLOAT, R_ASSGN = range(11)
+R_INT, R_FLOAT, R_ASSGN, R_OR, R_AND, R_NOT, R_LOW, R_HI, \
+R_EQ, R_NEQ, R_HIEQ, R_LOWEQ, R_LSB, R_RSB, R_IF, R_QM, R_DOTS, R_JMP, R_JMPF = range(27)
 
 RPN_SYMBOLS = {
-    '(': R_ALB, ')': R_ARB, '{': R_LFB, '}': R_RFB
+    '(': R_ALB, ')': R_ARB,
+    '{': R_LFB, '}': R_RFB,
+    '[': R_LSB, ']': R_RSB
 }
 
 RPN_OPERATORS = {
     '+': R_PLUS, '-': R_MINUS, '*': R_MUL,
-    '/': R_DIV, 'int': R_INT, 'float': R_FLOAT, '=': R_ASSGN
+    '/': R_DIV, 'int': R_INT, 'float': R_FLOAT, '=': R_ASSGN,
+    'or': R_OR, 'and': R_AND, 'not': R_NOT, '>': R_HI, '<': R_LOW,
+    '==': R_EQ, '!=': R_NEQ, '>=': R_HIEQ, '<=': R_LOWEQ,
+    'if': R_IF, '?': R_QM, ':': R_DOTS
 }
 
-RPN_PRIORITIES = {R_LFB: 0, R_RFB: 1, R_ASSGN: 3, R_ALB: 3, R_INT: 3, R_FLOAT: 3, R_ARB: 4, R_PLUS: 8, R_MINUS: 8, R_MUL: 9, R_DIV: 9}
+RPN_PRIORITIES = {R_LFB: 0,
+                  R_RFB: 1,
+                  R_IF: 2,
+                  R_QM: 3, R_DOTS: 3,
+                  R_LSB: 4,
+                  R_RSB: 5,
+                  R_ASSGN: 6, R_ALB: 6, R_INT: 6, R_FLOAT: 6,
+                  R_ARB: 7, R_OR: 7,
+                  R_AND: 8,
+                  R_NOT: 9,
+                  R_LOW: 10, R_HI: 10, R_EQ: 10, R_NEQ: 10, R_LOWEQ: 10,R_HIEQ: 10,
+                  R_PLUS: 11, R_MINUS: 11,
+                  R_MUL: 12, R_DIV: 12
+                  }
