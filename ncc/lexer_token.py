@@ -6,7 +6,7 @@ class Token:
         self.payload = lexeme
 
 
-class Word(Token):
+class Identity(Token):
     def __init__(self, tag, row_num, column_num, lexeme, index):
         super().__init__(tag, row_num, column_num, lexeme)
         self.index = index

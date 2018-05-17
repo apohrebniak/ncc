@@ -2,7 +2,7 @@ import sys
 
 from ncc.common import *
 from ncc.environment import IndTable, ConstantTable
-from ncc.my_token import Token, Word, Constant
+from ncc.lexer_token import Token, Identity, Constant
 
 """Parse input stream and return a list of tokens according to common.py"""
 
@@ -40,7 +40,7 @@ class Lexer:
       else:
           self.error("Unknown variable '{}'".format(lexeme))
 
-      self.tokens.append(Word(ID, self.lineNum, self.charNum, lexeme, index))
+      self.tokens.append(Identity(ID, self.lineNum, self.charNum, lexeme, index))
 
     self._strBuffer = ""
 

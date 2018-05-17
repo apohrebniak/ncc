@@ -1,7 +1,7 @@
 import sys
 
 import ncc.common as cmn
-import ncc.my_token as tkn
+import ncc.lexer_token as tkn
 
 """Recursive descend parser"""
 
@@ -351,7 +351,7 @@ class Parser():
 
     def is_id(self, i):
         token = self.tokens[i]
-        if isinstance(token, tkn.Word) and self.ids.contains_value(
+        if isinstance(token, tkn.Identity) and self.ids.contains_value(
             token.payload):
             return i + 1, True
         else:
