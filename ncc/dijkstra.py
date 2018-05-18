@@ -53,7 +53,8 @@ class DijkstraRPNBuilder:
             cmn.HI: self.common,
             cmn.HIEQ: self.common,
             cmn.COMMA: self.comma,
-            cmn.NL: self.new_line
+            cmn.NL: self.new_line,
+            cmn.UNARY_MINUS: self.common
         }
 
     """Common function for token"""
@@ -74,42 +75,6 @@ class DijkstraRPNBuilder:
             else:
                 break
         self.stack.append(rtoken)
-
-    def foo(self, ltoken):
-        pass
-
-    # def float_type(self, ltoken):
-    #     rtoken = rpntoken.RPNToken(cmn.R_FLOAT, cmn.FLOAT,
-    #                                cmn.RPN_PRIORITIES[cmn.R_FLOAT],
-    #                                ltoken.payload)
-    #     while len(self.stack) != 0:
-    #         if self.stack[-1].prio >= rtoken.prio:
-    #             self.rpn.append(self.stack.pop())
-    #         else:
-    #             break
-    #     self.stack.append(rtoken)
-    #
-    # def int_type(self, ltoken):
-    #     rtoken = rpntoken.RPNToken(cmn.R_INT, cmn.INT,
-    #                                cmn.RPN_PRIORITIES[cmn.R_INT],
-    #                                ltoken.payload)
-    #     while len(self.stack) != 0:
-    #         if self.stack[-1].prio >= rtoken.prio:
-    #             self.rpn.append(self.stack.pop())
-    #         else:
-    #             break
-    #     self.stack.append(rtoken)
-    #
-    # def assign(self, ltoken):
-    #     rtoken = rpntoken.RPNToken(cmn.R_ASSGN, cmn.ASSIGN,
-    #                                cmn.RPN_PRIORITIES[cmn.R_ASSGN],
-    #                                ltoken.payload)
-    #     while len(self.stack) != 0:
-    #         if self.stack[-1].prio >= rtoken.prio:
-    #             self.rpn.append(self.stack.pop())
-    #         else:
-    #             break
-    #     self.stack.append(rtoken)
 
     def comma(self, ltoken):
         self.io_op_args_count += 1
@@ -294,50 +259,6 @@ class DijkstraRPNBuilder:
             self.io_op_args_count += 1
             self.rpn.append(rpntoken.RPNArgsCountToken(self.io_op_args_count))
             self.io_op_args_count = 0
-
-    # def plus(self, ltoken):
-    #     rtoken = rpntoken.RPNToken(cmn.R_PLUS, cmn.PLUS,
-    #                                cmn.RPN_PRIORITIES[cmn.R_PLUS],
-    #                                ltoken.payload)
-    #     while len(self.stack) != 0:
-    #         if self.stack[-1].prio >= rtoken.prio:
-    #             self.rpn.append(self.stack.pop())
-    #         else:
-    #             break
-    #     self.stack.append(rtoken)
-    #
-    # def minus(self, ltoken):
-    #     rtoken = rpntoken.RPNToken(cmn.R_MINUS, cmn.MINUS,
-    #                                cmn.RPN_PRIORITIES[cmn.R_MINUS],
-    #                                ltoken.payload)
-    #     while len(self.stack) != 0:
-    #         if self.stack[-1].prio >= rtoken.prio:
-    #             self.rpn.append(self.stack.pop())
-    #         else:
-    #             break
-    #     self.stack.append(rtoken)
-    #
-    # def multiply(self, ltoken):
-    #     rtoken = rpntoken.RPNToken(cmn.R_MUL, cmn.MUL,
-    #                                cmn.RPN_PRIORITIES[cmn.R_MUL],
-    #                                ltoken.payload)
-    #     while len(self.stack) != 0:
-    #         if self.stack[-1].prio >= rtoken.prio:
-    #             self.rpn.append(self.stack.pop())
-    #         else:
-    #             break
-    #     self.stack.append(rtoken)
-    #
-    # def division(self, ltoken):
-    #     rtoken = rpntoken.RPNToken(cmn.R_DIV, cmn.DIV,
-    #                                cmn.RPN_PRIORITIES[cmn.R_DIV],
-    #                                ltoken.payload)
-    #     while len(self.stack) != 0:
-    #         if self.stack[-1].prio >= rtoken.prio:
-    #             self.rpn.append(self.stack.pop())
-    #         else:
-    #             break
-    #     self.stack.append(rtoken)
 
     def build_rpn(self):
 
