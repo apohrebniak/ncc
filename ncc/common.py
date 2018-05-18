@@ -23,7 +23,8 @@ TYPES = {
 # RPN specific symbols
 R_ALB, R_ARB, R_PLUS, R_MINUS, R_MUL, R_DIV, R_LFB, R_RFB, \
 R_INT, R_FLOAT, R_ASSGN, R_OR, R_AND, R_NOT, R_LOW, R_HI, \
-R_EQ, R_NEQ, R_HIEQ, R_LOWEQ, R_LSB, R_RSB, R_IF, R_QM, R_DOTS, R_JMP, R_JMPF = range(27)
+R_EQ, R_NEQ, R_HIEQ, R_LOWEQ, R_LSB, R_RSB, R_IF, R_QM, R_DOTS,\
+R_JMP, R_JMPF, R_WHILE, R_DO = range(29)
 
 RPN_SYMBOLS = {
     '(': R_ALB, ')': R_ARB,
@@ -36,13 +37,13 @@ RPN_OPERATORS = {
     '/': R_DIV, 'int': R_INT, 'float': R_FLOAT, '=': R_ASSGN,
     'or': R_OR, 'and': R_AND, 'not': R_NOT, '>': R_HI, '<': R_LOW,
     '==': R_EQ, '!=': R_NEQ, '>=': R_HIEQ, '<=': R_LOWEQ,
-    'if': R_IF, '?': R_QM, ':': R_DOTS
+    'if': R_IF, '?': R_QM, ':': R_DOTS, 'while': R_WHILE, 'do': R_DO
 }
 
 RPN_PRIORITIES = {R_LFB: 0,
                   R_RFB: 1,
-                  R_IF: 2,
-                  R_QM: 3, R_DOTS: 3,
+                  R_IF: 2, R_WHILE: 2,
+                  R_QM: 3, R_DOTS: 3, R_DO: 3,
                   R_LSB: 4,
                   R_RSB: 5,
                   R_ASSGN: 6, R_ALB: 6, R_INT: 6, R_FLOAT: 6,

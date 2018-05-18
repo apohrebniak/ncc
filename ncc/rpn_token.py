@@ -1,5 +1,6 @@
 import ncc.common as cmn
 
+
 class RPNToken:
     def __init__(self, rtag, ltag, prio, lexeme):
         self.rtag = rtag
@@ -47,8 +48,15 @@ class RPNJumpOperator:
         return "JMPF" if self.rtag == cmn.R_JMPF else "JMP"
 
 
-class RPNCombinedToken:
+class RPNCombinedIfToken:
     def __init__(self, if_token):
         self.if_token = if_token
         self.prio = if_token.prio
-        self.tokens = []
+        self.labels = []
+
+
+class RPNCombinedWhileToken:
+    def __init__(self, while_token):
+        self.while_token = while_token
+        self.prio = while_token.prio
+        self.labels = []
