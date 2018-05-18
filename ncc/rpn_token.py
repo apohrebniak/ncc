@@ -33,8 +33,9 @@ class RPNIdentity:
 
 
 class RPNLabel:
-    def __init__(self, index):
+    def __init__(self, index, offset):
         self.index = index
+        self.offset = offset
 
     def __repr__(self):
         return "lbl_" + str(self.index)
