@@ -2,8 +2,7 @@ import ncc.common as cmn
 import ncc.lexer_token as lexertoken
 import ncc.rpn_token as rpntoken
 
-NONE, STATE_IF, STATE_ELSE, STATE_WHILE, STATE_IO_OP = range(
-    5)  # TODO: maybe add state for ) in case of in/out ops
+STATE_NONE, STATE_IF, STATE_ELSE, STATE_WHILE = range(4)
 
 
 class DijkstraRPNBuilder:
@@ -18,7 +17,8 @@ class DijkstraRPNBuilder:
         self.next_label_index = 0
         self.labels_stack = []  # TODO: use this tack or remove list in Combined token
 
-        self.state = NONE
+        self.state_stack = []
+        self.state_stack.append(STATE_NONE)
         self.io_op_args_count = 0
 
     def build_lexeme_function_map(self):
@@ -99,6 +99,8 @@ class DijkstraRPNBuilder:
 
         self.stack[-1].labels.append(label)
 
+        self.state_stack.append(STATE_WHILE)
+
     def if_op(self, ltoken):
         rtoken = self.common(ltoken, append=False)
 
@@ -118,6 +120,7 @@ class DijkstraRPNBuilder:
         self.rpn.append(jump_false_op)
         # self.add_label_to_table(label) #TODO
         self.stack[-1].labels.append(label)  # have [if m1] in stack
+        self.state_stack.append(STATE_IF)
 
     def dots(self, ltoken):
         self.common(ltoken, append=False)
@@ -132,6 +135,7 @@ class DijkstraRPNBuilder:
         self.rpn.append(self.labels_stack.pop())
         # self.add_label_to_table(label) #TODO
         self.stack[-1].labels.append(label)  # have [if m1 m2] in stack
+        self.state_stack.append(STATE_ELSE)
 
     def right_square_bracket(self, ltoken):
         self.common(ltoken, append=False)
@@ -141,34 +145,28 @@ class DijkstraRPNBuilder:
         self.common(ltoken, append=False)
         self.stack.pop()
 
-        # FIXME workaround for whiles. If closing the "do" block, check for labels in stack
-        while len(self.stack) != 0 and isinstance(self.stack[-1],
-                                                  rpntoken.RPNCombinedWhileToken):
-            if len(self.stack[-1].labels) == 2:
-                label_2 = self.stack[-1].labels.pop()
-                label_1 = self.stack[-1].labels.pop()
-                jmp = rpntoken.RPNJumpOperator(cmn.R_JMP)
-                self.rpn.append(label_1)
-                self.rpn.append(jmp)
-                self.rpn.append(label_2)
-                self.stack.pop()
-            else:
-                break
-
-        # FIXME workaround for ifs. If closing the "else" block, check for labels in stack
-        while len(self.stack) != 0 and isinstance(self.stack[-1],
-                                                  rpntoken.RPNCombinedIfToken):
-            if len(self.stack[-1].labels) == 2:
-                self.rpn.append(self.stack[-1].labels[-1])
-                self.stack.pop()
-            else:
-                break
+        curr_state = self.state_stack[-1]
+        if curr_state == STATE_WHILE:
+            label_2 = self.stack[-1].labels.pop()
+            label_1 = self.stack[-1].labels.pop()
+            jmp = rpntoken.RPNJumpOperator(cmn.R_JMP)
+            self.rpn.append(label_1)
+            self.rpn.append(jmp)
+            self.rpn.append(label_2)
+            self.stack.pop()
+            self.state_stack.pop()
+        elif curr_state == STATE_ELSE:
+            self.rpn.append(self.stack[-1].labels[-1])
+            self.stack.pop()
+            self.state_stack.pop()
+        elif curr_state == STATE_IF:
+            self.state_stack.pop()
 
     def right_bracket(self, ltoken):
         rtoken = self.common(ltoken, append=False)
         self.stack.pop()
 
-        # FIXME: workaroud for io operations.
+        # workaroud for io operations.
         if self.stack[-1].rtag in [cmn.R_IN, cmn.R_OUT]:
             self.io_op_args_count += 1
             self.rpn.append(rpntoken.RPNArgsCountToken(self.io_op_args_count))
