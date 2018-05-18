@@ -2,7 +2,8 @@ import ncc.common as cmn
 import ncc.lexer_token as lexertoken
 import ncc.rpn_token as rpntoken
 
-NONE, STATE_IF, STATE_ELSE, STATE_WHILE = range(4)
+NONE, STATE_IF, STATE_ELSE, STATE_WHILE, STATE_IO_OP = range(
+    5)  # TODO: maybe add state for ) in case of in/out ops
 
 
 class DijkstraRPNBuilder:
@@ -15,9 +16,10 @@ class DijkstraRPNBuilder:
         self.lexeme_function_map = self.build_lexeme_function_map()
 
         self.next_label_index = 0
-        self.labels_stack = [] #TODO: use this tack or remove list in Combined token
+        self.labels_stack = []  # TODO: use this tack or remove list in Combined token
 
         self.state = NONE
+        self.io_op_args_count = 0
 
     def build_lexeme_function_map(self):
         return {
@@ -36,8 +38,8 @@ class DijkstraRPNBuilder:
             cmn.RSB: self.right_square_bracket,
             cmn.WHILE: self.while_op,
             cmn.DO: self.do,
-            cmn.IN: self.foo,
-            cmn.OUT: self.foo,
+            cmn.IN: self.common,
+            cmn.OUT: self.common,
             cmn.OR: self.common,
             cmn.AND: self.common,
             cmn.NOT: self.common,
@@ -50,7 +52,7 @@ class DijkstraRPNBuilder:
             cmn.LOWEQ: self.common,
             cmn.HI: self.common,
             cmn.HIEQ: self.common,
-            cmn.COMMA: self.foo,
+            cmn.COMMA: self.comma,
             cmn.NL: self.new_line
         }
 
@@ -108,6 +110,9 @@ class DijkstraRPNBuilder:
     #         else:
     #             break
     #     self.stack.append(rtoken)
+
+    def comma(self, ltoken):
+        self.io_op_args_count += 1
 
     def new_line(self, ltoken):
         rtoken = rpntoken.RPNToken(cmn.R_NL, ltoken.tag,
@@ -283,6 +288,12 @@ class DijkstraRPNBuilder:
             if self.stack[-1].prio >= rtoken.prio:
                 self.rpn.append(self.stack.pop())
         self.stack.pop()
+
+        # FIXME: workaroud for io operations.
+        if self.stack[-1].rtag in [cmn.R_IN, cmn.R_OUT]:
+            self.io_op_args_count += 1
+            self.rpn.append(rpntoken.RPNArgsCountToken(self.io_op_args_count))
+            self.io_op_args_count = 0
 
     # def plus(self, ltoken):
     #     rtoken = rpntoken.RPNToken(cmn.R_PLUS, cmn.PLUS,

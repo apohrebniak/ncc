@@ -60,3 +60,11 @@ class RPNCombinedWhileToken:
         self.while_token = while_token
         self.prio = while_token.prio
         self.labels = []
+
+
+class RPNArgsCountToken:
+    def __init__(self, count):
+        self.count = count
+
+    def __repr__(self):
+        return "count_" + str(self.count)
