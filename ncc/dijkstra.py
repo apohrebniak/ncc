@@ -51,6 +51,7 @@ class DijkstraRPNBuilder:
             cmn.HI: self.common,
             cmn.HIEQ: self.common,
             cmn.COMMA: self.foo,
+            cmn.NL: self.new_line
         }
 
     """Common function for token"""
@@ -107,6 +108,17 @@ class DijkstraRPNBuilder:
     #         else:
     #             break
     #     self.stack.append(rtoken)
+
+    def new_line(self, ltoken):
+        rtoken = rpntoken.RPNToken(cmn.R_NL, ltoken.tag,
+                                   cmn.RPN_PRIORITIES[cmn.R_NL],
+                                   ltoken.payload)
+
+        while len(self.stack) != 0:
+            if self.stack[-1].prio >= rtoken.prio:
+                self.rpn.append(self.stack.pop())
+            else:
+                break
 
     def while_op(self, ltoken):
         rtoken = rpntoken.RPNToken(cmn.R_WHILE, ltoken.tag,
@@ -319,9 +331,9 @@ class DijkstraRPNBuilder:
     def build_rpn(self):
 
         for token in self.ltokens:
-            if token.tag == cmn.NL:
-                continue  # skip
-            elif isinstance(token, lexertoken.Constant):
+            # if token.tag == cmn.NL:
+            # self.common(token)
+            if isinstance(token, lexertoken.Constant):
                 # pass token directly to rpn
                 self.rpn.append(
                     rpntoken.RPNConstant(token.tag, token.payload, token.index))
