@@ -25,36 +25,17 @@ class DijkstraRPNBuilder:
         return {
             cmn.LB: self.left_bracket,
             cmn.RB: self.right_bracket,
-            cmn.PLUS: self.common,
-            cmn.MINUS: self.common,
-            cmn.MUL: self.common,
-            cmn.DIV: self.common,
             cmn.LFB: self.left_figure_bracket,
             cmn.RFB: self.right_figure_bracket,
-            cmn.INT: self.common,
-            cmn.FLOAT: self.common,
-            cmn.ASSIGN: self.common,
             cmn.LSB: self.left_square_bracket,
             cmn.RSB: self.right_square_bracket,
             cmn.WHILE: self.while_op,
             cmn.DO: self.do,
-            cmn.IN: self.common,
-            cmn.OUT: self.common,
-            cmn.OR: self.common,
-            cmn.AND: self.common,
-            cmn.NOT: self.common,
             cmn.IF: self.if_op,
             cmn.QM: self.question_mark,
             cmn.DOTS: self.dots,
-            cmn.EQ: self.common,
-            cmn.NEQ: self.common,
-            cmn.LOW: self.common,
-            cmn.LOWEQ: self.common,
-            cmn.HI: self.common,
-            cmn.HIEQ: self.common,
             cmn.COMMA: self.comma,
-            cmn.NL: self.new_line,
-            cmn.UNARY_MINUS: self.common
+            cmn.NL: self.new_line
         }
 
     """Common function for token"""
@@ -263,8 +244,6 @@ class DijkstraRPNBuilder:
     def build_rpn(self):
 
         for token in self.ltokens:
-            # if token.tag == cmn.NL:
-            # self.common(token)
             if isinstance(token, lexertoken.Constant):
                 # pass token directly to rpn
                 self.rpn.append(
@@ -273,8 +252,10 @@ class DijkstraRPNBuilder:
                 # token is identity
                 self.rpn.append(
                     rpntoken.RPNIdentity(token.tag, token.payload, token.index))
-            else:
+            elif token.tag in self.lexeme_function_map:
                 self.lexeme_function_map[token.tag](token)
+            else:
+                self.common(token)
 
         """"Pop all stuff out from stack"""
         while len(self.stack) != 0:
