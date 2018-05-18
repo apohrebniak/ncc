@@ -21,27 +21,27 @@ TYPES = {
 }
 
 # RPN specific symbols
-R_ALB, R_ARB, R_PLUS, R_MINUS, R_MUL, R_DIV, R_LFB, R_RFB, \
+R_LB, R_RB, R_PLUS, R_MINUS, R_MUL, R_DIV, R_LFB, R_RFB, \
 R_INT, R_FLOAT, R_ASSGN, R_OR, R_AND, R_NOT, R_LOW, R_HI, \
 R_EQ, R_NEQ, R_HIEQ, R_LOWEQ, R_LSB, R_RSB, R_IF, R_QM, R_DOTS, \
 R_JMP, R_JMPF, R_WHILE, R_DO, R_NL, R_IN, R_OUT, R_COMMA, R_UNARY_MINUS = range(
     34)
 
-RPN_SYMBOLS = {
-    '(': R_ALB, ')': R_ARB,
-    '{': R_LFB, '}': R_RFB,
-    '[': R_LSB, ']': R_RSB,
-    '\n': R_NL,
-    ',': R_COMMA
+RPN_SYMS_MAPPING = {
+    LB: R_LB, RB: R_RB,
+    LFB: R_LFB, RFB: R_RFB,
+    LSB: R_LSB, RSB: R_RSB,
+    NL: R_NL,
+    COMMA: R_COMMA
 }
 
-RPN_OPERATORS = {
-    '+': R_PLUS, '-': R_MINUS, '*': R_MUL,
-    '/': R_DIV, 'int': R_INT, 'float': R_FLOAT, '=': R_ASSGN,
-    'or': R_OR, 'and': R_AND, 'not': R_NOT, '>': R_HI, '<': R_LOW,
-    '==': R_EQ, '!=': R_NEQ, '>=': R_HIEQ, '<=': R_LOWEQ,
-    'if': R_IF, '?': R_QM, ':': R_DOTS, 'while': R_WHILE, 'do': R_DO,
-    'in': R_IN, 'out': R_OUT, '~': R_UNARY_MINUS  # TODO: CHAAAAAAAAAAAAAAAAAAAANGEEEEEEEEEEE
+RPN_OPS_MAPPING = {
+    PLUS: R_PLUS, MINUS: R_MINUS, MUL: R_MUL,
+    DIV: R_DIV, INT: R_INT, FLOAT: R_FLOAT, ASSIGN: R_ASSGN,
+    OR: R_OR, AND: R_AND, NOT: R_NOT, HI: R_HI, LOW: R_LOW,
+    EQ: R_EQ, NEQ: R_NEQ, HIEQ: R_HIEQ, LOWEQ: R_LOWEQ,
+    IF: R_IF, QM: R_QM, DOTS: R_DOTS, WHILE: R_WHILE, DO: R_DO,
+    IN: R_IN, OUT: R_OUT, UNARY_MINUS: R_UNARY_MINUS
 }
 
 RPN_PRIORITIES = {R_LFB: 0,
@@ -51,8 +51,8 @@ RPN_PRIORITIES = {R_LFB: 0,
                   R_QM: 4, R_DOTS: 4, R_DO: 4,
                   R_LSB: 5,
                   R_RSB: 6,
-                  R_ASSGN: 7, R_ALB: 7, R_INT: 7, R_FLOAT: 7,
-                  R_ARB: 8, R_OR: 8,
+                  R_ASSGN: 7, R_LB: 7, R_INT: 7, R_FLOAT: 7,
+                  R_RB: 8, R_OR: 8,
                   R_AND: 9,
                   R_NOT: 10,
                   R_LOW: 11, R_HI: 11, R_EQ: 11, R_NEQ: 11, R_LOWEQ: 11,

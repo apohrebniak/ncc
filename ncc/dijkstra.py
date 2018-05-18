@@ -39,10 +39,10 @@ class DijkstraRPNBuilder:
         }
 
     def build_new_rtoken(self, ltoken):
-        if ltoken.payload in cmn.RPN_SYMBOLS:
-            rtag = cmn.RPN_SYMBOLS[ltoken.payload]
-        elif ltoken.payload in cmn.RPN_OPERATORS:
-            rtag = cmn.RPN_OPERATORS[ltoken.payload]
+        if ltoken.tag in cmn.RPN_SYMS_MAPPING:
+            rtag = cmn.RPN_SYMS_MAPPING[ltoken.tag]
+        elif ltoken.tag in cmn.RPN_OPS_MAPPING:
+            rtag = cmn.RPN_OPS_MAPPING[ltoken.tag]
 
         return rpntoken.RPNToken(rtag, ltoken.tag,
                                  cmn.RPN_PRIORITIES[rtag],
