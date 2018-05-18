@@ -15,10 +15,10 @@ class DijkstraRPNBuilder:
         self.lexeme_function_map = self.build_lexeme_function_map()
 
         self.next_label_index = 0
-        self.labels_stack = []  # TODO: use this tack or remove list in Combined token
-
+        """Current state. If in 'do' block, or if in 'else' block"""
         self.state_stack = []
         self.state_stack.append(STATE_NONE)
+
         self.io_op_args_count = 0
 
     def build_lexeme_function_map(self):
@@ -163,7 +163,7 @@ class DijkstraRPNBuilder:
             self.state_stack.pop()
 
     def right_bracket(self, ltoken):
-        rtoken = self.common(ltoken, append=False)
+        self.common(ltoken, append=False)
         self.stack.pop()
 
         # workaroud for io operations.
