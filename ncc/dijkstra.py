@@ -80,6 +80,7 @@ class DijkstraRPNBuilder:
         rtoken = self.common(ltoken, append=False)
 
         label = self.build_next_label()
+        label.offset = len(self.rpn)
         self.add_label_to_table(label)
         self.rpn.append(label)
         combined_token = rpntoken.RPNCombinedWhileToken(rtoken)
@@ -153,7 +154,6 @@ class DijkstraRPNBuilder:
             label_2 = self._stack[-1].labels.pop()
             label_1 = self._stack[-1].labels.pop()
             jmp = rpntoken.RPNJumpOperator(cmn.R_JMP)
-            self.label_map[label_1.index].offset = len(self.rpn)
             self.rpn.append(label_1)
             self.rpn.append(jmp)
             self.label_map[label_2.index].offset = len(self.rpn)
