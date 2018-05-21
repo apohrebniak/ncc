@@ -212,7 +212,8 @@ class Parser():
         curr_index = i
         if self.get_token_tag(curr_index) == cmn.SYMBOLS["-"]:
             self.tokens[curr_index].tag = cmn.UNARY_MINUS
-            self.tokens[curr_index].payload = "~" #FIXME: workaround for unary minus.Changes "-" to "~"
+            self.tokens[
+                curr_index].payload = "~"  # FIXME: workaround for unary minus.Changes "-" to "~"
             curr_index += 1
         index, res = self.is_term(curr_index)
         if res:
