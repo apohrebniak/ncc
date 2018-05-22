@@ -55,6 +55,9 @@ class RPNCombinedIfToken:
         self.prio = if_token.prio
         self.labels = []
 
+    def __repr__(self):
+        return "[{},{}]".format(repr(self.if_token), repr(self.labels))
+
 
 class RPNCombinedWhileToken:
     def __init__(self, while_token):

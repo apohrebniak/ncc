@@ -53,8 +53,14 @@ def main():
 
     # STAGE 3
     # dijkstra
-    rpnBuilder = djk.DijkstraRPNBuilder(tokens)
+    rpnBuilder = djk.DijkstraRPNBuilder(tokens, args.rpnt)
     rpn = rpnBuilder.build_rpn()
+
+    if args.rpn:
+        print(rpn)
+
+    if args.rpnt:
+        drw.draw_rpn_build_table(rpnBuilder.stages)
 
     if args.parse:
         sys.exit(0)

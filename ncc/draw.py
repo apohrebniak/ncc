@@ -39,3 +39,9 @@ def draw_ids_table(ids):
     data = [[c.value, c.typeName, c.index] for c in ids]
     print(
         tbls.format_pretty_table(data, column_names=["Const", "Type", "Index"]))
+
+
+def draw_rpn_build_table(rpn_stages):
+    print("R P N  S T A G E S")
+    data = [["\\n" if s.lexeme == "\n" else s.lexeme, s.stack, s.rpn] for s in rpn_stages]
+    print(tbls.format_pretty_table(data, column_names=["Lexeme", "Stack", "RPN"]))

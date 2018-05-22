@@ -5,8 +5,15 @@ import ncc.rpn_token as rpntoken
 STATE_NONE, STATE_IF, STATE_ELSE, STATE_WHILE = range(4)
 
 
+class StageSnapshot:
+    def __init__(self, lexeme, stack, rpn):
+        self.lexeme = lexeme
+        self.stack = [x for x in stack]
+        self.rpn = [x for x in rpn]
+
+
 class DijkstraRPNBuilder:
-    def __init__(self, ltokens):
+    def __init__(self, ltokens, save_stages=False):
         """tokens from lexer"""
         self.ltokens = ltokens
         """array of RPN-tokens in RPN"""
@@ -18,8 +25,12 @@ class DijkstraRPNBuilder:
         self._state_stack.append(STATE_NONE)
         """Labels map index --> label object"""
         self.label_map = dict()
+        """List of rpn build stages"""
+        self.stages = []
         self._next_label_index = 0
+        self._next_stage_index = 0
         self._io_op_args_count = 0
+        self.save_stages = save_stages
 
     def build_lexeme_function_map(self):
         return {
@@ -194,6 +205,9 @@ class DijkstraRPNBuilder:
                 self._lexeme_function_map[token.tag](token)
             else:
                 self.common(token)
+
+            if self.save_stages:
+                self.stages.append(StageSnapshot(token.payload, self._stack, self.rpn))
 
         """"Pop all stuff out from stack"""
         while len(self._stack) != 0:
